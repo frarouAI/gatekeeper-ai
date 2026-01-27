@@ -1,0 +1,36 @@
+name: Claude Code Judge
+
+on:
+  pull_request:
+    branches: [ "main", "master" ]
+  push:
+    branches: [ "main", "master" ]
+
+jobs:
+  code-judge:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install anthropic
+
+      - name: Run Claude Code Judge (CI mode)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python3 claude_cli.py good_code.py --ci > verdict.json
+
+      - name: Upload verdict artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-verdict
+          path: verdict.json
