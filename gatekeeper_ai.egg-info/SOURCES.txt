@@ -1,4 +1,5 @@
 claude_cli.py
+gatekeeper.py
 setup.py
 gatekeeper_ai.egg-info/PKG-INFO
 gatekeeper_ai.egg-info/SOURCES.txt
