@@ -1,0 +1,86 @@
+{
+  "schema_version": "1.2",
+  "engine": "v1",
+  "profile": "strict",
+  "score": 62.36,
+  "pass": false,
+  "blocking_failures": [
+    "correctness",
+    "security"
+  ],
+  "timestamp": "2026-01-27T16:27:16.025900+00:00",
+  "verdicts": [
+    {
+      "agent": "correctness",
+      "pass": false,
+      "score": 72,
+      "issues": [
+        "Missing error handling for get_engine() - could raise exceptions if engine_version is invalid",
+        "No validation that engine.judge() returns expected dict structure with required keys",
+        "Division by zero protection in gate_repo() uses max(len(total_scores), 1) but len(total_scores) can never be 0 when this line executes",
+        "No validation that verdict contains 'average_score' and 'blocking_failures' keys before accessing them",
+        "Cache key generation doesn't include model or max_tokens parameters, potentially causing cache collisions",
+        "No error handling for cache operations (get/set could fail)",
+        "VerdictSigner.sign() could modify the result dict in-place, affecting cached values",
+        "Missing type hints for return values of judge() and gate_repo() methods",
+        "No validation of input parameters (code could be None, files dict could contain None values)",
+        "Potential encoding issues if sign_key contains non-UTF8 characters when calling encode()"
+      ],
+      "summary": "Code has reasonable structure but lacks proper error handling and input validation. Key issues include missing exception handling for external dependencies, insufficient validation of data structures, and potential cache inconsistencies. The logic flow is generally correct but brittle to edge cases."
+    },
+    {
+      "agent": "security",
+      "pass": false,
+      "score": 45,
+      "issues": [
+        "Code execution vulnerability in v2 engine - arbitrary code execution without sandboxing",
+        "No input validation on code parameter - could lead to injection attacks",
+        "Unsafe deserialization risk in cache operations without validation",
+        "Missing signature verification implementation despite verify parameter",
+        "Hardcoded sensitive configuration exposed in global PROFILES",
+        "No rate limiting or resource constraints on code execution",
+        "Cache key collision possible with weak hashing approach",
+        "Missing authentication/authorization for judge operations",
+        "Potential path traversal in gate_repo file handling",
+        "No logging of security events or suspicious activities"
+      ],
+      "summary": "Critical security vulnerabilities present, particularly arbitrary code execution in v2 engine without sandboxing. Missing input validation, authentication, and proper security controls throughout the codebase."
+    },
+    {
+      "agent": "performance",
+      "pass": false,
+      "score": 68,
+      "issues": [
+        "O(n) time complexity for gate_repo method with potential O(n\u00b2) space complexity due to blocking_agents list operations",
+        "Inefficient list membership check in blocking_agents using 'not in' operator creates O(n) lookup per agent",
+        "Cache key generation uses multiple string encodings and hash operations for every judge call",
+        "Redundant cache_hit flag manipulation - set to False then immediately overwritten",
+        "No connection pooling or resource management for engine instances",
+        "String concatenation in engine name creation could be optimized",
+        "Manual test code included in production module increases memory footprint",
+        "No lazy loading of expensive components like VerdictCache and VerdictSigner",
+        "Potential memory leak from accumulating total_scores list in gate_repo without bounds checking"
+      ],
+      "summary": "Code has acceptable functionality but suffers from several performance inefficiencies including O(n\u00b2) operations in gate_repo, inefficient cache key generation, and suboptimal data structure usage. The blocking_agents list should use a set for O(1) lookups, cache key generation should be memoized, and resource management needs improvement. Memory usage could be optimized by removing test code and implementing lazy loading."
+    },
+    {
+      "agent": "style",
+      "pass": true,
+      "score": 82,
+      "issues": [
+        "Missing module-level docstring",
+        "Missing class docstring for MultiAgentCodeJudge",
+        "Missing docstrings for all methods (_cache_key, judge, gate_repo)",
+        "Long parameter list in __init__ method could benefit from grouping or using **kwargs",
+        "Variable name 'h' in _cache_key method is not descriptive",
+        "Variable name 'EngineClass' uses PascalCase for a local variable (should be snake_case)",
+        "Manual test code in __main__ block lacks proper structure and could be in a separate test function",
+        "Inconsistent spacing around dictionary values in PROFILES constant",
+        "Missing type hints for some variables (cached, result in judge method)",
+        "The comment '# ---- manual test ----' uses non-standard formatting"
+      ],
+      "summary": "Code demonstrates good structure and follows most PEP8 conventions with proper imports, type hints, and error handling. However, it lacks comprehensive docstrings, has some naming inconsistencies, and the manual test section could be better organized. The logic is clear and maintainable overall."
+    }
+  ],
+  "file": ".agent_backups/20260127_133401/multi_judge.py"
+}

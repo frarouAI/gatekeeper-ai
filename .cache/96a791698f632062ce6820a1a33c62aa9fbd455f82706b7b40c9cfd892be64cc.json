@@ -1,0 +1,86 @@
+{
+  "schema_version": "1.2",
+  "engine": "v1",
+  "profile": "strict",
+  "score": 58.91,
+  "pass": false,
+  "blocking_failures": [
+    "correctness",
+    "security"
+  ],
+  "timestamp": "2026-01-27T16:14:14.190081+00:00",
+  "verdicts": [
+    {
+      "agent": "correctness",
+      "pass": false,
+      "score": 65,
+      "issues": [
+        "Profile validation occurs before None check - will raise TypeError if profile is None",
+        "Division by zero protection exists but total_weight could theoretically be 0 if all agents have 0 weight",
+        "Missing validation for empty code input",
+        "No error handling for engine initialization failures",
+        "Cache operations lack error handling - could fail silently or raise exceptions",
+        "Signer operations lack error handling",
+        "AGENT_POLICY import happens inside method rather than at module level",
+        "No validation that verdicts list is not empty before processing",
+        "gate_repo method is identical to judge_repo, making gate parameter meaningless",
+        "Missing type hints for return values in some methods"
+      ],
+      "summary": "Code has logical structure but contains several critical bugs including improper None handling for profile parameter, potential runtime errors from missing validations, and poor error handling throughout. The profile validation bug will cause immediate failure for valid None inputs."
+    },
+    {
+      "agent": "security",
+      "pass": false,
+      "score": 45,
+      "issues": [
+        "Profile validation allows None value but PROFILES dict access will raise KeyError",
+        "No input validation on code parameter - could contain malicious content",
+        "Cache key collision possible with SHA256 truncation for very large inputs",
+        "Signature verification enabled but no actual verification logic implemented",
+        "External engine execution without sandboxing could allow code injection",
+        "Dictionary access on verdicts without validation could cause KeyError exceptions",
+        "AGENT_POLICY imported from engines.v1 without error handling",
+        "No rate limiting or resource constraints on judge operations",
+        "Timestamp generation could be manipulated if system clock is compromised",
+        "File path parameter not validated - could contain path traversal sequences"
+      ],
+      "summary": "Code has multiple security vulnerabilities including insufficient input validation, missing error handling, potential code injection through external engines, and incomplete signature verification implementation. The profile validation logic is flawed and cache implementation lacks proper collision handling."
+    },
+    {
+      "agent": "performance",
+      "pass": false,
+      "score": 68,
+      "issues": [
+        "Redundant engine resolution logic - engine_version or engine parameter creates unnecessary complexity",
+        "Cache key computation using SHA256 is overkill for simple string hashing - could use built-in hash() for better performance",
+        "Missing cache size limits could lead to unbounded memory growth",
+        "Repeated datetime.now(timezone.utc).isoformat() calls instead of computing once",
+        "judge_repo processes files sequentially - no parallelization for potentially I/O bound operations",
+        "gate_repo method is completely redundant - just calls judge_repo with no additional logic",
+        "Importing AGENT_POLICY inside judge method on every call instead of module-level import",
+        "No lazy loading of engine - instantiated even if cached results available",
+        "Potential memory inefficiency storing full verdict objects in cache without size management"
+      ],
+      "summary": "Code has reasonable structure but suffers from several performance inefficiencies including redundant method calls, suboptimal caching strategy, lack of parallelization opportunities, and unnecessary computational overhead in hash generation and engine instantiation."
+    },
+    {
+      "agent": "style",
+      "pass": false,
+      "score": 72,
+      "issues": [
+        "Missing module-level docstring",
+        "Missing class docstring for MultiAgentCodeJudge",
+        "Missing docstrings for all methods (__init__, _cache_key, judge, judge_repo, gate_repo)",
+        "Import from engines.v1 inside method creates coupling and reduces readability",
+        "Variable name 'h' is too short and unclear (should be 'hasher' or 'hash_obj')",
+        "Variable name 'v' is too short and unclear (should be 'verdict')",
+        "Method gate_repo is redundant - just calls judge_repo without modification",
+        "Long parameter list in __init__ method could benefit from grouping or builder pattern",
+        "Magic number 2 in round() function should be a named constant",
+        "Inconsistent spacing in PROFILES dictionary alignment"
+      ],
+      "summary": "Code has good structure and follows most PEP8 conventions, but lacks comprehensive documentation and has several readability issues with variable naming and method organization. The logic is sound but would benefit from better documentation and cleaner variable names."
+    }
+  ],
+  "file": "multi_judge.py"
+}

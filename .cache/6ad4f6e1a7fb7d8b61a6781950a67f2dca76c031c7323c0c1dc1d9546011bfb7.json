@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.2",
+  "engine": "claude-code-judge:v1",
+  "engine_version": "v1",
+  "model": "claude-sonnet-4-20250514",
+  "profile": "strict",
+  "context": "judge_internal",
+  "timestamp": "2026-01-27T11:13:45.574462+00:00",
+  "overall_pass": false,
+  "policy_pass": false,
+  "average_score": 15.45,
+  "threshold": 85,
+  "blocking_failures": [
+    "correctness",
+    "security"
+  ],
+  "verdicts": [
+    {
+      "agent": "correctness",
+      "pass": false,
+      "score": 0,
+      "issues": [
+        "Model failed to return valid JSON"
+      ],
+      "summary": "Invalid JSON response from model."
+    },
+    {
+      "agent": "security",
+      "pass": false,
+      "score": 0,
+      "issues": [
+        "Model failed to return valid JSON"
+      ],
+      "summary": "Invalid JSON response from model."
+    },
+    {
+      "agent": "performance",
+      "pass": true,
+      "score": 85,
+      "issues": [
+        "collect_repo_files() loads all Python files into memory simultaneously, which could cause memory issues for large repositories",
+        "No file size validation before reading files, potentially loading very large files",
+        "Exception handling in collect_repo_files() is too broad and silently ignores all errors",
+        "Multiple file system operations without batching or async processing",
+        "No early termination or filtering options for large directory traversals"
+      ],
+      "summary": "The code has good overall structure and reasonable performance for typical use cases, but lacks safeguards for large repositories. The main concern is memory usage when processing many or large files simultaneously. The recursive file collection and synchronous file reading could be optimized for better scalability."
+    },
+    {
+      "agent": "style",
+      "pass": false,
+      "score": 0,
+      "issues": [
+        "Model failed to return valid JSON"
+      ],
+      "summary": "Invalid JSON response from model."
+    }
+  ],
+  "cache_hit": false
+}

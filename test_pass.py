@@ -1,0 +1,1 @@
+def good(): return True

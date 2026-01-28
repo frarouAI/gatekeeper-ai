@@ -1,0 +1,10 @@
+--- a/multi_judge.py
++++ b/multi_judge.py
+@@ -193,6 +193,7 @@ class MultiAgentCodeJudge:
+         result = {
+             "schema_version": SCHEMA_VERSION,
+             "engine": self.name,
++            "engine_version": self.engine_version,
+             "model": self.backend.model,
+             "profile": self.profile_name,
+             "context": context,

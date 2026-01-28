@@ -1,0 +1,81 @@
+{
+  "schema_version": "1.2",
+  "engine": "v1",
+  "profile": "strict",
+  "score": 55.64,
+  "pass": false,
+  "blocking_failures": [
+    "correctness",
+    "security"
+  ],
+  "timestamp": "2026-01-27T16:23:04.471885+00:00",
+  "verdicts": [
+    {
+      "agent": "correctness",
+      "pass": false,
+      "score": 65,
+      "issues": [
+        "Missing import error handling - ClaudeBackend import will fail if module doesn't exist",
+        "No validation that repo_root exists or is a directory before processing",
+        "collect_repo_context silently ignores all file reading exceptions, potentially hiding permission errors or encoding issues",
+        "No handling of ClaudeBackend initialization failures or API errors",
+        "No validation of max_files parameter - could be negative or zero",
+        "Path resolution could fail on invalid paths but isn't handled",
+        "Backend.judge() method call could raise exceptions that aren't caught",
+        "No validation that the prompt argument is non-empty",
+        "Hardcoded model name may not exist or be valid",
+        "No timeout handling for potentially long-running operations"
+      ],
+      "summary": "Code has basic functionality but lacks proper error handling and input validation. Multiple failure points could cause unhandled exceptions. The silent exception handling in file reading could mask important errors. Missing validation for critical inputs like repository path and model name."
+    },
+    {
+      "agent": "security",
+      "pass": false,
+      "score": 45,
+      "issues": [
+        "Path traversal vulnerability: args.repo is resolved without validation, allowing access to arbitrary filesystem locations",
+        "Uncontrolled file reading: collect_repo_context reads files without size limits, enabling potential DoS through large files",
+        "Information disclosure: Error handling silently passes exceptions, potentially exposing sensitive file contents",
+        "Injection risk: User prompt is directly concatenated into system prompt without sanitization",
+        "Resource exhaustion: No limits on total context size or memory usage when reading multiple files",
+        "Missing input validation: No validation of model parameter or other user inputs",
+        "Unsafe file enumeration: rglob pattern matching could be exploited with malicious filenames"
+      ],
+      "summary": "Code contains multiple security vulnerabilities including path traversal, uncontrolled file access, potential injection attacks, and resource exhaustion risks. The application reads arbitrary files from user-specified paths without proper validation or limits, creating significant security exposure."
+    },
+    {
+      "agent": "performance",
+      "pass": false,
+      "score": 45,
+      "issues": [
+        "collect_repo_context() has O(n) time complexity where n is total files in repository, potentially scanning thousands of files unnecessarily",
+        "No early termination optimization - continues scanning filesystem even after reaching max_files limit",
+        "Memory inefficient: loads entire file contents into memory for all files simultaneously without streaming",
+        "Exception handling is too broad with bare 'except Exception' - masks potential performance issues like memory errors",
+        "No file size validation - could attempt to load extremely large files causing memory exhaustion",
+        "String concatenation in loop creates O(n\u00b2) complexity due to immutable string operations",
+        "rglob() recursively traverses entire directory tree without depth limits, potentially very expensive on large repositories",
+        "No caching mechanism - repo context rebuilt on every execution even for unchanged repositories",
+        "Hard-coded max_tokens=2500 may be insufficient for large contexts, causing truncation and wasted processing"
+      ],
+      "summary": "Code has significant performance and scalability issues including inefficient file traversal, memory management problems, and lack of optimization for large repositories. The O(n\u00b2) string operations and unlimited directory recursion make it unsuitable for production use on large codebases."
+    },
+    {
+      "agent": "style",
+      "pass": true,
+      "score": 82,
+      "issues": [
+        "Missing module-level docstring explaining the purpose and usage of the script",
+        "Function 'collect_repo_context' lacks docstring describing parameters, return value, and behavior",
+        "Function 'main' lacks docstring",
+        "Bare 'except Exception:' clause in collect_repo_context should specify expected exceptions or log the error",
+        "Magic number 2500 for max_tokens should be a named constant",
+        "Variable name 'files' could be more descriptive (e.g., 'python_files')",
+        "Hard-coded file extension '*.py' limits flexibility - could be parameterized",
+        "No input validation for max_files parameter (should be positive integer)"
+      ],
+      "summary": "Well-structured code with good separation of concerns and clear logic flow. Follows PEP8 conventions and uses appropriate imports. Main issues are missing docstrings, overly broad exception handling, and some magic numbers. The code is readable and maintainable but would benefit from better documentation and error handling."
+    }
+  ],
+  "file": "clawdbot.py"
+}

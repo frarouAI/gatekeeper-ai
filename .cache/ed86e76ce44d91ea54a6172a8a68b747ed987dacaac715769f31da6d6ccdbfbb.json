@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.2",
+  "engine": "v1",
+  "profile": "strict",
+  "score": 64.91,
+  "pass": false,
+  "blocking_failures": [
+    "correctness",
+    "security"
+  ],
+  "timestamp": "2026-01-27T16:13:44.648181+00:00",
+  "verdicts": [
+    {
+      "agent": "correctness",
+      "pass": false,
+      "score": 72,
+      "issues": [
+        "No input validation - function accepts any dict without checking required keys",
+        "Missing error handling for file operations in write_html_report",
+        "HTML injection vulnerability - user inputs are not escaped before insertion into HTML",
+        "No validation that file_path, model, or output_path are valid strings",
+        "Potential KeyError if result dict missing expected keys like 'policy_pass', 'verdicts', 'average_score'",
+        "No handling of Path.write_text exceptions (permissions, disk space, invalid path)",
+        "HTML structure assumes specific data types without validation (e.g., v['score'] could be non-numeric)"
+      ],
+      "summary": "Code has basic functionality but lacks essential input validation, error handling, and security measures. The HTML generation works for well-formed inputs but is vulnerable to injection attacks and runtime errors with malformed data."
+    },
+    {
+      "agent": "security",
+      "pass": false,
+      "score": 45,
+      "issues": [
+        "XSS vulnerability: User input from result dict is directly embedded into HTML without escaping",
+        "XSS vulnerability: file_path parameter is directly embedded into HTML without sanitization",
+        "XSS vulnerability: model parameter is directly embedded into HTML without escaping",
+        "Path traversal risk: output_path parameter is not validated before file write operation",
+        "HTML injection: Agent names, summaries, and issues from result dict are inserted raw into HTML",
+        "No input validation on any parameters allowing malicious data injection",
+        "File write operation without proper error handling or permission checks"
+      ],
+      "summary": "Critical XSS vulnerabilities throughout HTML generation with no input sanitization. All user-controlled data is directly embedded into HTML output, allowing script injection. Path traversal risks in file operations. Requires immediate security fixes including HTML escaping and input validation."
+    },
+    {
+      "agent": "performance",
+      "pass": true,
+      "score": 82,
+      "issues": [
+        "String concatenation in loops creates O(n\u00b2) complexity - agent_blocks += creates new strings each iteration",
+        "Multiple f-string operations could be optimized with template-based approach for better memory efficiency",
+        "No input validation on parameters which could cause runtime errors",
+        "HTML generation is not escaped, potential XSS vulnerability if user data contains HTML"
+      ],
+      "summary": "Code has good overall structure and readability but suffers from inefficient string concatenation in loops and lacks input validation. The O(n\u00b2) string building pattern is the main performance concern, though for typical report sizes this may not be problematic. Consider using list comprehension with join() or template engines for better scalability."
+    },
+    {
+      "agent": "style",
+      "pass": true,
+      "score": 82,
+      "issues": [
+        "Missing module-level docstring",
+        "Missing function docstrings for both functions",
+        "Long string literal (HTML template) makes function hard to read - consider extracting to separate file or constant",
+        "Variable name 'v' is not descriptive - should be 'verdict' or 'agent_verdict'",
+        "Variable name 'a' is not descriptive - should be 'agent' or 'failure'",
+        "HTML string formatting could be more readable with triple quotes and better indentation",
+        "No type hints for return type of write_html_report function",
+        "Consider using pathlib.Path consistently instead of mixing with string paths"
+      ],
+      "summary": "Code is functionally sound with good type hints and proper imports, but lacks documentation and has readability issues with long embedded HTML strings and non-descriptive variable names. The structure is clean but would benefit from better organization of the HTML template."
+    }
+  ],
+  "file": "html_report.py"
+}

@@ -1,0 +1,10 @@
+--- a/claude_cli.py
++++ b/claude_cli.py
+@@ -36,7 +36,6 @@ def main():
+         model=args.model,
+         profile=profile,
+         gate=args.gate,
+-        enable_metering=not args.no_meter,
+     )
+ 
+     if args.json:

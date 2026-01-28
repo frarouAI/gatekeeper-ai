@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.2",
+  "engine": "v1",
+  "profile": "strict",
+  "score": 77.45,
+  "pass": false,
+  "blocking_failures": [
+    "correctness"
+  ],
+  "timestamp": "2026-01-27T16:24:59.347089+00:00",
+  "verdicts": [
+    {
+      "agent": "correctness",
+      "pass": false,
+      "score": 65,
+      "issues": [
+        "Function returns class object instead of instance - likely should return ENGINE_REGISTRY[engine_name]()",
+        "Missing return type annotation - should specify -> Type[EngineV1 | EngineV2] or -> EngineV1 | EngineV2",
+        "No input validation for None or empty string parameters",
+        "Missing docstring to clarify intended behavior",
+        "Potential import errors not handled if engines.v1 or engines.v2 modules don't exist"
+      ],
+      "summary": "Code has correct error handling for invalid engine names but likely has a logic error returning class instead of instance. Missing type annotations and input validation reduce robustness."
+    },
+    {
+      "agent": "security",
+      "pass": true,
+      "score": 85,
+      "issues": [
+        "No input validation or sanitization on engine_name parameter",
+        "Error message reveals internal system information (available engines)",
+        "Function returns class reference rather than instance, potential for misuse"
+      ],
+      "summary": "Code is generally secure with proper registry pattern and exception handling, but lacks input validation and exposes internal information in error messages. Consider sanitizing inputs and limiting error message details."
+    },
+    {
+      "agent": "performance",
+      "pass": true,
+      "score": 85,
+      "issues": [
+        "Dictionary lookup in error message creates unnecessary list() conversion of keys",
+        "No caching mechanism for repeated engine lookups",
+        "Function returns class reference rather than instance - may cause confusion about instantiation overhead"
+      ],
+      "summary": "Clean factory pattern implementation with O(1) lookup time and minimal memory overhead. The registry-based approach scales well for adding new engines. Minor inefficiency in error message generation and potential for optimization with caching for high-frequency lookups."
+    },
+    {
+      "agent": "style",
+      "pass": true,
+      "score": 82,
+      "issues": [
+        "Missing module docstring",
+        "Function 'get_engine' lacks docstring",
+        "Missing return type annotation for 'get_engine' function",
+        "Excessive blank lines at end of file (should be single newline)",
+        "Consider adding type hints for ENGINE_REGISTRY values"
+      ],
+      "summary": "Code is well-structured with good naming and error handling, but lacks documentation and has minor formatting issues. The registry pattern is clean and the error message is informative."
+    }
+  ],
+  "file": "engines/registry.py"
+}

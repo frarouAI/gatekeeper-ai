@@ -1,0 +1,78 @@
+{
+  "schema_version": "1.2",
+  "engine": "claude-code-judge:v1",
+  "engine_version": "v1",
+  "model": "claude-sonnet-4-20250514",
+  "profile": "strict",
+  "timestamp": "2026-01-27T09:57:40.663792+00:00",
+  "overall_pass": false,
+  "policy_pass": false,
+  "average_score": 59.55,
+  "threshold": 85,
+  "blocking_failures": [
+    "correctness",
+    "security"
+  ],
+  "verdicts": [
+    {
+      "agent": "correctness",
+      "pass": false,
+      "score": 75,
+      "issues": [
+        "No input validation - function accepts any dict without checking required keys",
+        "Missing error handling for file write operations in write_html_report",
+        "HTML injection vulnerability - user inputs are not escaped before insertion into HTML",
+        "No validation that output_path directory exists before writing file",
+        "Function assumes result dict has specific structure but doesn't validate it",
+        "No handling of potential encoding issues when writing HTML file",
+        "Missing type hints for some variables (verdict_color, verdict_text, etc.)",
+        "No validation that file_path and model parameters are valid strings"
+      ],
+      "summary": "The code generates HTML reports but has significant security and robustness issues. The main problems are HTML injection vulnerabilities from unescaped user inputs, lack of input validation, and missing error handling for file operations. While the basic logic appears sound, the code is not production-ready due to these safety concerns."
+    },
+    {
+      "agent": "security",
+      "pass": false,
+      "score": 25,
+      "issues": [
+        "XSS vulnerability: User-controlled data from result dict is directly embedded into HTML without escaping",
+        "XSS vulnerability: file_path parameter is inserted into HTML without sanitization",
+        "XSS vulnerability: model parameter is inserted into HTML without escaping",
+        "Path traversal risk: output_path parameter passed to Path().write_text() without validation",
+        "HTML injection: Agent names, summaries, and issues from result dict are embedded as raw HTML",
+        "No input validation on any parameters allowing malicious data injection",
+        "Potential file overwrite: No checks on output_path destination or permissions"
+      ],
+      "summary": "Critical XSS vulnerabilities throughout HTML generation with no input sanitization. User-controlled data from result dictionary, file paths, and model names are directly embedded into HTML output without escaping, allowing script injection. Path traversal risks exist in file writing operations."
+    },
+    {
+      "agent": "performance",
+      "pass": true,
+      "score": 85,
+      "issues": [
+        "String concatenation in loops using += operator creates new string objects each iteration, O(n\u00b2) complexity for agent_blocks construction",
+        "Multiple string formatting operations could be consolidated to reduce overhead",
+        "HTML escaping not implemented - potential security risk with user input in file_path, model, and result data",
+        "Large HTML template string stored in memory as single block may cause memory pressure for large reports"
+      ],
+      "summary": "Code has good overall structure and readability but suffers from inefficient string concatenation in loops and lacks input sanitization. The O(n\u00b2) string building pattern should be replaced with list joining for better performance with larger datasets."
+    },
+    {
+      "agent": "style",
+      "pass": true,
+      "score": 85,
+      "issues": [
+        "Missing module-level docstring",
+        "Function 'generate_html_report' lacks docstring",
+        "Function 'write_html_report' lacks docstring",
+        "Long string literal in 'html' variable could be extracted to improve readability",
+        "CSS styles embedded in Python string - consider external template or dedicated CSS handling",
+        "Magic numbers in CSS (padding, margins) could be constants",
+        "No input validation for parameters",
+        "Function 'write_html_report' has no return value documentation"
+      ],
+      "summary": "Code follows PEP8 conventions with good naming and structure. Main issues are missing docstrings, embedded HTML/CSS making the code less maintainable, and lack of input validation. The logic is clear but would benefit from better separation of concerns between HTML generation and styling."
+    }
+  ],
+  "cache_hit": false
+}

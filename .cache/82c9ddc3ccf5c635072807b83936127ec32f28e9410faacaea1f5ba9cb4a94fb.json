@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.2",
+  "engine": "claude-code-judge:v1",
+  "engine_version": "v1",
+  "model": "claude-sonnet-4-20250514",
+  "profile": "strict",
+  "context": "judge_internal",
+  "timestamp": "2026-01-27T11:14:38.102162+00:00",
+  "overall_pass": false,
+  "policy_pass": false,
+  "average_score": 42.73,
+  "threshold": 85,
+  "blocking_failures": [
+    "correctness"
+  ],
+  "verdicts": [
+    {
+      "agent": "correctness",
+      "pass": false,
+      "score": 0,
+      "issues": [
+        "Model failed to return valid JSON"
+      ],
+      "summary": "Invalid JSON response from model."
+    },
+    {
+      "agent": "security",
+      "pass": true,
+      "score": 85,
+      "issues": [
+        "Potential path traversal vulnerability in determine_context() - file_path parameter is not validated before use with os.path.basename()",
+        "Cache key generation uses user-controlled input (code, context) without sanitization - could lead to cache pollution attacks",
+        "JSON parsing error handling could expose internal system information through error messages",
+        "No input validation on code parameter length - could lead to resource exhaustion",
+        "File path handling in gate_repo() method processes arbitrary paths without validation"
+      ],
+      "summary": "Judge infrastructure code with legitimate use of potentially dangerous operations. Main concerns are insufficient input validation for file paths and user-controlled data, potential cache pollution, and lack of resource limits. The code structure is sound for its intended purpose but needs better input sanitization."
+    },
+    {
+      "agent": "performance",
+      "pass": false,
+      "score": 65,
+      "issues": [
+        "gate_repo method has O(n) space complexity for blocking_agents list with potential duplicates",
+        "Multiple dictionary lookups for same keys (AGENTS[agent_name], AGENT_POLICY[agent_name]) without caching",
+        "String concatenation in _build_prompt creates multiple temporary strings",
+        "Cache key computation involves multiple hash updates that could be optimized",
+        "gate_repo processes files sequentially without parallelization opportunity",
+        "Redundant max() call in gate_repo average calculation",
+        "No early termination in gate_repo when blocking failures exceed threshold",
+        "JSON parsing exception handling creates new dictionary instead of modifying existing result"
+      ],
+      "summary": "Code has moderate performance issues including inefficient data structures, redundant operations, and missed optimization opportunities. The gate_repo method particularly suffers from sequential processing and suboptimal blocking agent tracking. Cache key generation and prompt building could be more efficient."
+    },
+    {
+      "agent": "style",
+      "pass": false,
+      "score": 0,
+      "issues": [
+        "Model failed to return valid JSON"
+      ],
+      "summary": "Invalid JSON response from model."
+    }
+  ],
+  "cache_hit": false
+}

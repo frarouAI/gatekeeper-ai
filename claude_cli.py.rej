@@ -1,0 +1,8 @@
+@@ -36,7 +36,6 @@
+         model=args.model,
+         profile=profile,
+         gate=args.gate,
+-        enable_metering=not args.no_meter,
+     )
+ 
+     if args.json:

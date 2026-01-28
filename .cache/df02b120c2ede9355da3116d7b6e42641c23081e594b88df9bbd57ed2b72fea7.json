@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.2",
+  "engine": "claude-code-judge:v1",
+  "engine_version": "v1",
+  "model": "claude-sonnet-4-20250514",
+  "profile": "strict",
+  "context": "judge_internal",
+  "timestamp": "2026-01-27T11:14:09.724112+00:00",
+  "overall_pass": false,
+  "policy_pass": false,
+  "average_score": 63.18,
+  "threshold": 85,
+  "blocking_failures": [
+    "security"
+  ],
+  "verdicts": [
+    {
+      "agent": "correctness",
+      "pass": true,
+      "score": 85,
+      "issues": [
+        "No validation of input parameters - result dict structure not verified",
+        "HTML injection vulnerability - user inputs not escaped before embedding in HTML",
+        "No error handling for file write operations in write_html_report",
+        "Missing validation that result contains required keys like 'verdicts', 'policy_pass', 'average_score'"
+      ],
+      "summary": "Code is functionally correct for happy path scenarios but lacks input validation and security measures. The HTML generation logic is sound and handles optional fields appropriately, but user-controlled data should be escaped to prevent HTML injection attacks. File operations need error handling for production robustness."
+    },
+    {
+      "agent": "security",
+      "pass": false,
+      "score": 25,
+      "issues": [
+        "XSS vulnerability: Direct interpolation of user data into HTML without escaping in file_path, model, and result fields",
+        "HTML injection risk: Agent names, summaries, and issues are inserted directly into HTML without sanitization",
+        "Path traversal risk: output_path parameter in write_html_report() not validated, could write to arbitrary locations",
+        "No input validation on any parameters including result dictionary structure"
+      ],
+      "summary": "Critical XSS vulnerabilities due to unescaped user input in HTML generation, plus path traversal risk in file writing"
+    },
+    {
+      "agent": "performance",
+      "pass": true,
+      "score": 85,
+      "issues": [
+        "String concatenation in loops using += operator creates new string objects each iteration, O(n\u00b2) complexity for agent_blocks construction",
+        "Multiple string formatting operations could be consolidated to reduce overhead",
+        "No input validation on parameters which could cause runtime errors",
+        "Large HTML template string stored in memory as single literal may impact memory usage for large reports"
+      ],
+      "summary": "Code has good overall structure and readability but suffers from inefficient string concatenation in loops. The main performance issue is the O(n\u00b2) complexity when building agent_blocks due to string immutability in Python. Consider using list comprehension with join() or string templates for better performance. Memory usage is reasonable for typical use cases but could be optimized for large datasets."
+    },
+    {
+      "agent": "style",
+      "pass": true,
+      "score": 85,
+      "issues": [
+        "Missing module-level docstring",
+        "Function 'generate_html_report' lacks docstring - should document parameters and return value",
+        "Function 'write_html_report' lacks docstring - should document parameters and side effects",
+        "Long string literal (HTML template) makes function hard to read - consider extracting to separate template file or constant",
+        "Magic numbers in CSS (padding, margins, font sizes) could be defined as constants",
+        "No input validation for parameters",
+        "HTML template uses inline styles instead of external CSS which reduces maintainability"
+      ],
+      "summary": "Code follows PEP8 conventions with good naming and structure. Main issues are missing docstrings, lack of input validation, and maintainability concerns with the large inline HTML template. The logic is clear and the code is functional, but would benefit from better documentation and template separation."
+    }
+  ],
+  "cache_hit": false
+}

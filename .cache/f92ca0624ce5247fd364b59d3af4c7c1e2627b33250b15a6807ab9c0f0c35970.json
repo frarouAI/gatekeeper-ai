@@ -1,0 +1,78 @@
+{
+  "schema_version": "1.2",
+  "engine": "claude-code-judge:v1",
+  "engine_version": "v1",
+  "model": "claude-sonnet-4-20250514",
+  "profile": "strict",
+  "timestamp": "2026-01-27T09:58:13.445410+00:00",
+  "overall_pass": false,
+  "policy_pass": false,
+  "average_score": 48.18,
+  "threshold": 85,
+  "blocking_failures": [
+    "correctness",
+    "security"
+  ],
+  "verdicts": [
+    {
+      "agent": "correctness",
+      "pass": false,
+      "score": 75,
+      "issues": [
+        "Division by zero potential in gate_repo method when files dict is empty - max(len(total_scores), 1) protects against it but the logic suggests this case wasn't fully considered",
+        "Missing validation that AGENTS, AGENT_POLICY, and PROFILES dictionaries contain consistent keys - could cause KeyError at runtime",
+        "No validation that agent_name exists in AGENT_POLICY when iterating through AGENTS in judge method",
+        "Cache key generation doesn't include model or max_tokens parameters, potentially causing cache hits with different configurations",
+        "VerdictSigner.sign() method is called but its return type and behavior are unknown - could modify result unexpectedly",
+        "No error handling for backend.judge() failures beyond JSON parsing",
+        "gate_repo method doesn't handle the case where files dict is empty (would cause division by zero without the max() protection)",
+        "Missing type hints for some method parameters and return values",
+        "Potential memory issues with large codebases in gate_repo method - no batching or limits"
+      ],
+      "summary": "Code has several correctness issues including missing validation of configuration consistency, inadequate error handling, and potential runtime failures. The cache key generation logic is incomplete, and there are edge cases in gate_repo that could cause issues. While basic functionality appears sound, the code lacks robustness for production use."
+    },
+    {
+      "agent": "security",
+      "pass": false,
+      "score": 25,
+      "issues": [
+        "Potential code injection vulnerability in _build_prompt method - user code is directly interpolated into prompt string without sanitization",
+        "Hash collision risk in _cache_key method - SHA256 is used but no salt or additional entropy to prevent targeted collisions",
+        "Unsafe JSON parsing in _run_agent method - raw model output is parsed without size limits or validation",
+        "Missing input validation on code parameter - no length limits or content filtering before processing",
+        "Cryptographic key handling issue - sign_key is encoded to bytes without proper key validation or secure storage",
+        "Cache poisoning vulnerability - cache keys could be manipulated to serve malicious cached results",
+        "No rate limiting or resource exhaustion protection for judge operations",
+        "Timestamp generation uses system time without validation - could be manipulated",
+        "File path traversal risk in gate_repo method - file paths from dictionary keys are not validated"
+      ],
+      "summary": "Code contains multiple security vulnerabilities including potential code injection through unsanitized prompt construction, unsafe JSON parsing, weak cache key generation, and missing input validation. The cryptographic signing implementation lacks proper key validation. Critical security controls like rate limiting and input sanitization are absent."
+    },
+    {
+      "agent": "performance",
+      "pass": false,
+      "score": 65,
+      "issues": [
+        "Sequential agent execution creates O(n) API calls with no parallelization",
+        "Cache key computation uses multiple hash updates instead of single operation",
+        "Redundant dictionary lookups for AGENTS and AGENT_POLICY in loops",
+        "gate_repo method has O(n*m) complexity where n=files, m=agents with no optimization",
+        "Blocking agents list uses linear search for duplicates instead of set",
+        "Exception handling creates new dictionary on every JSON parse failure",
+        "Cache operations perform redundant key computation",
+        "No connection pooling or request batching for backend calls"
+      ],
+      "summary": "Code has significant performance bottlenecks including sequential API calls, inefficient data structures, and redundant operations. The O(n*m) complexity in gate_repo and lack of parallelization for agent execution are major scalability concerns. Cache implementation and duplicate detection need optimization."
+    },
+    {
+      "agent": "style",
+      "pass": false,
+      "score": 0,
+      "issues": [
+        "Model failed to return valid JSON"
+      ],
+      "summary": "Invalid JSON response from model."
+    }
+  ],
+  "cache_hit": false
+}

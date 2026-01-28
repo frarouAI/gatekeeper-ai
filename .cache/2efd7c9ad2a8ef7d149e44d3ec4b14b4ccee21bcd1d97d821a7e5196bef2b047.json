@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.2",
+  "engine": "claude-code-judge:v1",
+  "engine_version": "v1",
+  "model": "claude-sonnet-4-20250514",
+  "profile": "strict",
+  "context": "judge_internal",
+  "timestamp": "2026-01-27T11:14:59.157919+00:00",
+  "overall_pass": false,
+  "policy_pass": false,
+  "average_score": 46.36,
+  "threshold": 85,
+  "blocking_failures": [
+    "correctness"
+  ],
+  "verdicts": [
+    {
+      "agent": "correctness",
+      "pass": false,
+      "score": 0,
+      "issues": [
+        "Model failed to return valid JSON"
+      ],
+      "summary": "Invalid JSON response from model."
+    },
+    {
+      "agent": "security",
+      "pass": true,
+      "score": 85,
+      "issues": [
+        "Secret key is stored in memory as bytes - consider using secure memory handling or key derivation",
+        "No explicit algorithm validation in verify() - accepts any 'alg' field value",
+        "Missing input validation for verdict parameter type and structure"
+      ],
+      "summary": "Code implements HMAC-SHA256 signing correctly with proper timing-safe comparison and canonical JSON serialization. Uses secure cryptographic practices but could benefit from enhanced input validation and secure key handling."
+    },
+    {
+      "agent": "performance",
+      "pass": true,
+      "score": 85,
+      "issues": [
+        "Dictionary copying in sign() method creates unnecessary overhead - could modify in-place or use more efficient approach",
+        "JSON serialization occurs twice during verification - payload could be cached or reused",
+        "No input validation for verdict parameter type in sign/verify methods",
+        "String encoding of secret_key in constructor could be deferred until first use"
+      ],
+      "summary": "Well-structured cryptographic signing implementation with good time complexity O(n) for JSON serialization and constant time for HMAC operations. Uses secure practices like hmac.compare_digest() for timing attack prevention. Minor inefficiencies in dictionary copying and redundant JSON serialization, but overall performance is acceptable for typical use cases. Space complexity is linear with input size, which is optimal."
+    },
+    {
+      "agent": "style",
+      "pass": false,
+      "score": 0,
+      "issues": [
+        "Model failed to return valid JSON"
+      ],
+      "summary": "Invalid JSON response from model."
+    }
+  ],
+  "cache_hit": false
+}

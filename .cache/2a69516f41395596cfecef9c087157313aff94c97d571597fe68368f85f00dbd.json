@@ -1,0 +1,86 @@
+{
+  "schema_version": "1.2",
+  "engine": "v1",
+  "profile": "strict",
+  "score": 47.45,
+  "pass": false,
+  "blocking_failures": [
+    "correctness",
+    "security"
+  ],
+  "timestamp": "2026-01-27T16:22:34.655167+00:00",
+  "verdicts": [
+    {
+      "agent": "correctness",
+      "pass": false,
+      "score": 45,
+      "issues": [
+        "Missing import for MultiAgentCodeJudge - will cause ImportError at runtime",
+        "No error handling for file operations that could fail (permissions, disk space, corrupted files)",
+        "Race condition: files could be modified between detection and processing",
+        "Infinite loop with no graceful shutdown mechanism beyond KeyboardInterrupt",
+        "Log file operations not thread-safe and could corrupt with concurrent access",
+        "No validation of config parameters - invalid paths or types could cause crashes",
+        "File encoding not specified when reading Python files - could fail on non-UTF8 files",
+        "Processed files tracking uses memory that grows indefinitely",
+        "No handling of empty or invalid JSON when writing results",
+        "Directory creation could fail silently if parent directories don't exist"
+      ],
+      "summary": "Code has significant correctness issues including missing critical imports, inadequate error handling, race conditions, and potential memory leaks. The main functionality would fail at startup due to import errors, and runtime reliability is compromised by insufficient exception handling and file operation safety."
+    },
+    {
+      "agent": "security",
+      "pass": false,
+      "score": 45,
+      "issues": [
+        "Path traversal vulnerability in watch_dirs configuration - no validation of directory paths",
+        "Arbitrary file read vulnerability - processes any .py file in watch directories without validation",
+        "Code execution risk - imports and uses MultiAgentCodeJudge which may execute untrusted code",
+        "File system race condition - files renamed to .processed without atomic operations",
+        "No input sanitization on user_id parameter allowing directory traversal in result filenames",
+        "Unrestricted file write access to results directory with user-controlled filenames",
+        "Missing authentication/authorization checks despite allowed_users configuration",
+        "Potential log injection through unvalidated user input in log messages",
+        "No file size limits allowing potential DoS through large file processing",
+        "Exception handling exposes system information through error logging"
+      ],
+      "summary": "Critical security vulnerabilities including path traversal, arbitrary file access, potential code execution, and insufficient input validation. The bot processes untrusted files without proper sandboxing or validation, creating multiple attack vectors for malicious users."
+    },
+    {
+      "agent": "performance",
+      "pass": false,
+      "score": 45,
+      "issues": [
+        "Inefficient file system polling with 2-second sleep intervals creates unnecessary CPU overhead",
+        "Unbounded memory growth in processed set - never cleared, will accumulate indefinitely",
+        "Synchronous file I/O operations block the main thread during large file reads",
+        "No file size limits or validation could lead to memory exhaustion on large files",
+        "Nested loops with glob operations scale poorly O(n*m) with many directories and files",
+        "Exception handling with 5-second sleep on errors creates poor responsiveness",
+        "String concatenation in format_verdict method is inefficient for large result sets",
+        "Log file grows unbounded without rotation, eventual disk space issues",
+        "Missing connection pooling or async operations for potential network calls in MultiAgentCodeJudge"
+      ],
+      "summary": "Poor performance design with inefficient file polling, unbounded memory growth, blocking I/O operations, and lack of scalability considerations. The architecture will degrade significantly under load with multiple files or long-running operation."
+    },
+    {
+      "agent": "style",
+      "pass": false,
+      "score": 72,
+      "issues": [
+        "Missing docstrings for methods setup_dirs, judge_code, format_verdict, log, watch_directory, and main function",
+        "Method format_verdict has high cyclomatic complexity and should be broken down into smaller functions",
+        "watch_directory method is too long (40+ lines) and handles multiple responsibilities",
+        "Global CONFIG variable should follow UPPER_CASE naming convention but could be better encapsulated",
+        "Hard-coded string literals like './logs/bot.log' should be configurable",
+        "Exception handling in watch_directory is too broad - catches all exceptions",
+        "Missing type hints for some parameters and return values",
+        "Long line in format_verdict method exceeds recommended length",
+        "Magic numbers like sleep(2) and sleep(5) should be constants",
+        "File operations lack proper error handling and resource management"
+      ],
+      "summary": "Code has good structure and follows most PEP8 conventions, but lacks comprehensive docstrings, has overly complex methods, and needs better error handling. The main issues are missing documentation, methods that are too long/complex, and insufficient error handling for file operations."
+    }
+  ],
+  "file": "bot_server.py"
+}

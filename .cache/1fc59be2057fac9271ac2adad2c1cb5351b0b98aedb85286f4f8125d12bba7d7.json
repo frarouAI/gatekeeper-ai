@@ -1,0 +1,84 @@
+{
+  "schema_version": "1.2",
+  "engine": "v1",
+  "profile": "strict",
+  "score": 60.91,
+  "pass": false,
+  "blocking_failures": [
+    "correctness",
+    "security"
+  ],
+  "timestamp": "2026-01-27T16:26:44.077215+00:00",
+  "verdicts": [
+    {
+      "agent": "correctness",
+      "pass": false,
+      "score": 72,
+      "issues": [
+        "Division by zero potential in gate_repo method when files dict is empty - max(len(total_scores), 1) protects sum/len but len(total_scores) could still be 0",
+        "Missing validation for required fields in agent result dictionary - code assumes 'score' and 'pass' keys exist without checking",
+        "No error handling for missing agents in AGENTS dictionary when iterating in judge method",
+        "No error handling for missing agent policies in AGENT_POLICY dictionary",
+        "Cache key collision possible - different code with same hash could theoretically occur",
+        "Missing validation that agent result 'score' is numeric and within 0-100 range",
+        "No bounds checking on total_weight before division in average_score calculation",
+        "Inconsistent error handling - some methods have try/catch, others don't handle potential exceptions"
+      ],
+      "summary": "Code has solid structure and logic but lacks comprehensive error handling and input validation. The main correctness issues are around missing validation of dictionary keys, potential division by zero scenarios, and insufficient error handling for external dependencies. The caching and scoring logic appears sound but could be more robust."
+    },
+    {
+      "agent": "security",
+      "pass": false,
+      "score": 45,
+      "issues": [
+        "Potential path traversal vulnerability in determine_context() - file_path parameter is not validated and could contain malicious paths",
+        "Code injection risk in _build_prompt() - agent_name and context parameters are directly interpolated into prompt without sanitization",
+        "Unsafe deserialization in _run_agent() - json.loads() called on untrusted model output without validation",
+        "Information disclosure through error messages - raw model responses and internal errors may leak sensitive information",
+        "Missing input validation on code parameter - could allow injection of malicious content into prompts",
+        "Weak cryptographic key handling - sign_key passed as string and encoded without proper key derivation",
+        "Cache poisoning potential - cache keys based on user-controlled input without sufficient validation",
+        "Directory traversal in file path handling - basename() alone insufficient to prevent path manipulation attacks"
+      ],
+      "summary": "Code contains multiple critical security vulnerabilities including path traversal, code injection, unsafe deserialization, and insufficient input validation. The prompt construction allows injection attacks, file path handling is unsafe, and cryptographic operations lack proper security measures."
+    },
+    {
+      "agent": "performance",
+      "pass": false,
+      "score": 65,
+      "issues": [
+        "O(n) file processing in gate_repo without parallelization for potentially large repositories",
+        "Redundant cache key computation using multiple hash updates instead of single concatenated hash",
+        "Linear search through blocking_failures list in gate_repo creates O(n\u00b2) complexity",
+        "JSON parsing exception handling returns hardcoded response instead of preserving original error context",
+        "Cache hit flag manipulation creates unnecessary state mutation after cache storage",
+        "String concatenation in _build_prompt could be inefficient for large code blocks",
+        "No batching mechanism for multiple agent evaluations on same code",
+        "Weighted score calculation performs redundant arithmetic operations in loop"
+      ],
+      "summary": "Code has acceptable time complexity for single file operations but suffers from scalability issues in repository-level processing. The gate_repo method processes files sequentially without parallelization, and uses inefficient list operations. Cache key generation and JSON error handling could be optimized. Overall architecture is reasonable but needs performance improvements for large-scale usage."
+    },
+    {
+      "agent": "style",
+      "pass": false,
+      "score": 72,
+      "issues": [
+        "Missing module-level docstring",
+        "Missing class docstring for MultiAgentCodeJudge",
+        "Missing docstrings for all methods (__init__, _cache_key, _build_prompt, _run_agent, judge, gate_repo)",
+        "Missing docstring for determine_context function",
+        "Inconsistent spacing around section comments (internals, public API, MONETIZATION FEATURE)",
+        "Long parameter list in __init__ method could benefit from grouping or builder pattern",
+        "Magic numbers without explanation (max_tokens=1500, threshold values)",
+        "Hardcoded string literals in multiple places could be constants",
+        "Variable name 'h' is too short and unclear in _cache_key method",
+        "Variable name 'raw' is vague in _run_agent method",
+        "Exception handling is too broad in _run_agent method",
+        "Comment style inconsistent - some use dashes, some are uppercase",
+        "Long line in gate_repo method exceeds readability guidelines"
+      ],
+      "summary": "Code has good structure and follows most PEP8 conventions, but lacks comprehensive documentation. Missing docstrings throughout, inconsistent commenting style, and some readability issues with variable naming and magic numbers. The logic is sound but maintainability suffers from poor documentation."
+    }
+  ],
+  "file": "whatsapp-bot/multi_judge.py"
+}

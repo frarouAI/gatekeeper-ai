@@ -1,0 +1,81 @@
+You are operating inside the repository:
+
+/Users/frank/projects/claude-code-judge
+
+The system is currently broken due to:
+1) Wrong working directory usage (whatsapp-bot vs repo root)
+2) Broken heredoc / partial file writes
+3) Incorrect relative path from whatsapp-bot/bot.js to claude_cli.py
+4) Missing or misplaced bot_server.py and bot_cli.py
+5) claude_cli.py must remain the single source of truth for judging
+
+Your job is to repair the project so that ALL of the following work:
+
+A) From repo root:
+   python3 claude_cli.py . --gate --profile strict
+
+B) From repo root:
+   python3 claude_cli.py judge submissions/example.py
+
+C) From whatsapp-bot:
+   node bot.js
+   → scanning QR
+   → sending Python code via WhatsApp
+   → correctly calls claude_cli.py
+   → returns formatted verdict text
+
+----------------------------------
+HARD CONSTRAINTS (DO NOT VIOLATE)
+----------------------------------
+
+1) Do NOT weaken any agents (correctness, security, performance, style)
+2) Do NOT relax blocking semantics
+3) Do NOT change public verdict schema fields
+4) Do NOT remove context logic (judge_internal vs model_code)
+5) Do NOT bypass claude_cli.py
+6) Do NOT inject exec/eval or dynamic imports
+7) Do NOT introduce new dependencies
+8) Determinism must be preserved
+
+----------------------------------
+REQUIRED FIXES
+----------------------------------
+
+1) Ensure claude_cli.py lives at:
+   /Users/frank/projects/claude-code-judge/claude_cli.py
+
+2) Ensure whatsapp-bot/bot.js spawns Python using the exact path:
+   path.join(__dirname, "..", "claude_cli.py")
+
+3) Ensure bot.js runs:
+   python3 ../claude_cli.py judge <tempfile.py>
+
+4) Ensure any heredoc-damaged files are fully rewritten cleanly.
+
+5) Ensure submissions/example.py exists and is valid Python.
+
+----------------------------------
+OUTPUT FORMAT (STRICT)
+----------------------------------
+
+Return only:
+
+• Patch list grouped by file  
+• Unified diffs only  
+• No commentary inside diffs  
+• After diffs: a very short explanation (≤ 6 lines)  
+• Final verification commands to run  
+
+----------------------------------
+STOP CONDITION
+----------------------------------
+
+Stop only when ALL of the following pass:
+
+1) python3 claude_cli.py . --gate --profile strict
+2) python3 claude_cli.py judge submissions/example.py
+3) node whatsapp-bot/bot.js starts and waits for QR
+
+----------------------------------
+BEGIN REPAIR
+----------------------------------

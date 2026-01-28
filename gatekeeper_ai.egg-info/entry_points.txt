@@ -1,0 +1,2 @@
+[console_scripts]
+gatekeeper = claude_cli:main

@@ -1,0 +1,83 @@
+{
+  "schema_version": "1.2",
+  "engine": "claude-code-judge:v1",
+  "engine_version": "v1",
+  "model": "claude-sonnet-4-20250514",
+  "profile": "strict",
+  "timestamp": "2026-01-27T09:57:15.786079+00:00",
+  "overall_pass": false,
+  "policy_pass": false,
+  "average_score": 58.64,
+  "threshold": 85,
+  "blocking_failures": [
+    "correctness",
+    "security"
+  ],
+  "verdicts": [
+    {
+      "agent": "correctness",
+      "pass": false,
+      "score": 75,
+      "issues": [
+        "No error handling for target.read_text() in single file mode - will crash if file doesn't exist or can't be read",
+        "No validation that target path exists before attempting to read it",
+        "collect_repo_files silently ignores all file read exceptions, potentially masking permission errors or corrupted files",
+        "No validation that MultiAgentCodeJudge constructor succeeds or that the judge object is properly initialized",
+        "Assumes judge.gate_repo() and judge.judge() methods exist and return expected dictionary structures without validation",
+        "No handling of potential JSON serialization errors when printing results",
+        "Missing import validation - if multi_judge module doesn't exist, will crash with unclear error",
+        "Gate mode assumes 'gate_pass' key exists in returned dictionary without validation",
+        "Single file mode assumes 'policy_pass' key exists in returned dictionary without validation"
+      ],
+      "summary": "Code has multiple error handling gaps that could cause crashes. Main issues are lack of file existence validation, missing exception handling for file operations, and assumptions about return value structures from external dependencies without validation."
+    },
+    {
+      "agent": "security",
+      "pass": false,
+      "score": 25,
+      "issues": [
+        "Uncaught file read operations without proper error handling or validation",
+        "Path traversal vulnerability - no validation of file paths in collect_repo_files",
+        "Arbitrary file read through user-controlled file argument",
+        "No input sanitization on file paths before processing",
+        "Exception handling too broad - silently ignores all file read errors",
+        "No size limits on files being read - potential DoS through large files",
+        "Missing validation of file extensions beyond .py filter",
+        "User input directly used in Path() constructor without validation"
+      ],
+      "summary": "Code contains multiple file system security vulnerabilities including path traversal, arbitrary file read, and insufficient input validation. The collect_repo_files function recursively reads files without proper path validation, and user-provided file arguments are used directly without sanitization. Error handling is overly broad, potentially masking security issues."
+    },
+    {
+      "agent": "performance",
+      "pass": true,
+      "score": 85,
+      "issues": [
+        "collect_repo_files() loads all Python files into memory simultaneously which could cause memory issues for large repositories",
+        "No file size validation before reading files - could attempt to load very large files",
+        "Exception handling in collect_repo_files() is too broad and silently ignores all errors",
+        "Recursive glob pattern *.py processes all files without early filtering, potentially scanning unnecessary directories",
+        "No streaming or chunked processing for large files or repositories"
+      ],
+      "summary": "Code has good overall structure and reasonable performance characteristics for typical use cases. Main concerns are around memory usage when processing large repositories due to loading all files into memory at once, and lack of file size validation. The broad exception handling could mask important errors. For small to medium repositories, performance should be acceptable, but scalability issues may arise with very large codebases."
+    },
+    {
+      "agent": "style",
+      "pass": false,
+      "score": 75,
+      "issues": [
+        "Missing module docstring explaining the purpose and functionality of the script",
+        "Function 'collect_repo_files' lacks docstring describing parameters, return value, and behavior",
+        "Function 'main' lacks docstring explaining its purpose and functionality",
+        "Bare 'except Exception:' clause in collect_repo_files should specify expected exceptions or log the error",
+        "Long argument list in MultiAgentCodeJudge constructor could benefit from line breaks for readability",
+        "Magic numbers and strings ('v1', 'startup', 'claude-sonnet-4-20250514') should be defined as constants",
+        "Inconsistent spacing around operators and after commas in some lines",
+        "Hard-coded exit codes (0, 1) could be defined as named constants for clarity",
+        "Long print statements in main() could be broken into multiple lines for better readability",
+        "Missing type hints for 'main' function return type"
+      ],
+      "summary": "The code is generally well-structured and follows most PEP8 conventions, but lacks proper documentation, has some error handling issues, and could benefit from better constant definitions and formatting improvements. The logic is clear but would be more maintainable with docstrings and better exception handling."
+    }
+  ],
+  "cache_hit": false
+}

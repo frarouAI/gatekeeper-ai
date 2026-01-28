@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.2",
+  "engine": "claude-code-judge:v1",
+  "engine_version": "v1",
+  "model": "claude-sonnet-4-20250514",
+  "profile": "strict",
+  "timestamp": "2026-01-27T10:02:06.064753+00:00",
+  "overall_pass": false,
+  "policy_pass": false,
+  "average_score": 74.09,
+  "threshold": 85,
+  "blocking_failures": [
+    "correctness",
+    "security"
+  ],
+  "verdicts": [
+    {
+      "agent": "correctness",
+      "pass": false,
+      "score": 75,
+      "issues": [
+        "Missing import error handling - ClaudeBackend import may fail",
+        "No validation of required fields in returned JSON data",
+        "backend.judge() method call assumes specific interface without error handling",
+        "No type hints for return type of backend.judge()",
+        "Truncating raw response to 500 chars in summary may lose important error information",
+        "No validation that returned JSON contains expected fields with correct types"
+      ],
+      "summary": "Code has good error handling for JSON parsing but lacks validation of the parsed data structure and proper error handling for the backend service call. Missing import error handling and type safety checks."
+    },
+    {
+      "agent": "security",
+      "pass": false,
+      "score": 65,
+      "issues": [
+        "Potential code injection vulnerability - user-provided code is directly embedded into prompt without sanitization",
+        "No input validation on code parameter - could accept malicious payloads",
+        "Raw model output truncated to 500 chars in error case may leak sensitive information",
+        "Missing error handling for backend.judge() method calls",
+        "No rate limiting or input size restrictions on code parameter"
+      ],
+      "summary": "The code has a significant security vulnerability where unsanitized user input is directly embedded into AI prompts, creating potential for prompt injection attacks. Additionally, there's insufficient input validation and error handling throughout the application."
+    },
+    {
+      "agent": "performance",
+      "pass": true,
+      "score": 85,
+      "issues": [],
+      "summary": "Code demonstrates good performance characteristics with O(1) time complexity for core operations and minimal memory overhead. The JSON parsing fallback and string truncation are appropriate defensive measures that don't significantly impact performance."
+    },
+    {
+      "agent": "style",
+      "pass": true,
+      "score": 85,
+      "issues": [
+        "Missing module-level docstring",
+        "Missing class docstring",
+        "Missing method docstrings",
+        "Magic number 500 in summary truncation should be a named constant",
+        "Could benefit from type hints for return type of backend.judge method"
+      ],
+      "summary": "Well-structured code with good error handling and clear separation of concerns. Main issues are missing docstrings and a magic number that should be extracted as a constant."
+    }
+  ],
+  "cache_hit": false
+}

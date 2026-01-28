@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.2",
+  "engine": "v1",
+  "profile": "strict",
+  "score": 84.73,
+  "pass": false,
+  "blocking_failures": [],
+  "timestamp": "2026-01-27T16:17:12.777539+00:00",
+  "verdicts": [
+    {
+      "agent": "correctness",
+      "pass": true,
+      "score": 85,
+      "issues": [
+        "No input validation on context parameter - could accept None or non-string types",
+        "Functions don't handle unexpected context values explicitly - they silently fall back to base prompt",
+        "AGENTS dictionary has inconsistent structure - some entries use 'prompt_fn' while others use 'system_prompt'",
+        "No validation that prompt_fn values are actually callable functions"
+      ],
+      "summary": "Code is functionally correct with good separation of concerns and clear logic flow. The prompt generation functions work as intended, and the configuration dictionaries are well-structured. However, there are minor robustness issues around input validation and data structure consistency that could cause runtime errors in edge cases."
+    },
+    {
+      "agent": "security",
+      "pass": true,
+      "score": 85,
+      "issues": [
+        "Security prompt allows dangerous functions like exec() and compile() for judge_internal context without specific safeguards",
+        "No input validation on context parameter - could lead to unexpected behavior if malicious context values are passed",
+        "Configuration data is stored in global dictionaries without access controls or validation"
+      ],
+      "summary": "Code is generally secure but has some concerns around allowing dangerous functions in judge_internal context and lack of input validation. The configuration system could benefit from additional safeguards to prevent tampering."
+    },
+    {
+      "agent": "performance",
+      "pass": true,
+      "score": 85,
+      "issues": [
+        "String concatenation in get_security_prompt could be optimized using f-strings or join for better performance",
+        "Multiple dictionary lookups could benefit from caching if accessed frequently",
+        "Hardcoded string literals create memory overhead that could be reduced with constants"
+      ],
+      "summary": "Code demonstrates good performance characteristics with O(1) operations and minimal overhead. The configuration-driven design is efficient and scalable. Minor optimizations possible in string handling and constant usage, but overall performance is solid for a configuration module."
+    },
+    {
+      "agent": "style",
+      "pass": true,
+      "score": 82,
+      "issues": [
+        "Missing module-level docstring to explain the purpose of this configuration module",
+        "Function docstrings are missing - should document parameters, return values, and purpose",
+        "Inconsistent spacing in AGENT_POLICY dictionary values alignment",
+        "Magic strings like 'judge_internal' could be defined as constants for better maintainability",
+        "Long string literals in prompt functions could benefit from better formatting or external storage",
+        "Type hints are good but could be more specific (e.g., Literal types for context parameter)"
+      ],
+      "summary": "Code follows PEP8 conventions with good naming and structure. Main issues are missing docstrings and some formatting inconsistencies. The configuration-driven approach is well-organized and maintainable."
+    }
+  ],
+  "file": "agents.py"
+}
