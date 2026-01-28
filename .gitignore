@@ -1,17 +1,17 @@
+# Gatekeeper runtime
+.gatekeeper/
+.cache/
+logs/
+
 # Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
 
-# Logs
-*.log
-logs/
-
-# Gatekeeper runtime output
-.gatekeeper/
-_smoke/
-_smoke_test.py
-
-# Browser / WhatsApp junk
+# Secrets / sessions
 .wwebjs_auth/
 whatsapp-bot/.wwebjs_auth/
 
