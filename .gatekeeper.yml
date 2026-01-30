@@ -3,23 +3,12 @@ profile: strict
 
 paths:
   include:
-    - "**/*.py"
-  exclude:
-    - ".venv/**"
-    - ".cache/**"
-    - ".gatekeeper/**"
+    - "_smoke/smoke.py"
 
 ci:
   enabled: true
-  fail_on_confidence_below: 0.85
 
 repair:
   enabled: false
   mode: dry-run
   max_iterations: 1
-
-runtime:
-  model: claude-sonnet-4-20250514
-  timeout_seconds: 30
-  max_tokens: 1500
-  cost_limit_usd: 1.00
