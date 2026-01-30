@@ -2,6 +2,7 @@
 .gatekeeper/
 .cache/
 logs/
+artifacts/
 
 # Python
 __pycache__/
@@ -10,10 +11,13 @@ __pycache__/
 *.pyd
 *.egg-info/
 dist/
+build/
 
 # Secrets / sessions
 .wwebjs_auth/
 whatsapp-bot/.wwebjs_auth/
+whatsapp-bot/*.log
 
 # OS
 .DS_Store
+
