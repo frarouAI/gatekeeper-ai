@@ -1,0 +1,10 @@
+version = 1
+
+[profile]
+name = "strict"
+
+[paths]
+forbidden = [
+  "secrets/",
+  ".env",
+]

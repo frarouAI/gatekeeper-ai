@@ -1,67 +1,161 @@
-"""
-Gatekeeper Judge — Code Quality Assessment
+from pathlib import Path
+import hashlib
 
-This module contains the core judging logic that evaluates Python code
-against quality standards.
-"""
+from autofix_header import HEADER, HEADER_RULE_ID, has_header as _has_header
 
-def judge_code(code: str, profile: str = "strict") -> dict:
-    """
-    Judge Python code against quality standards.
-    
-    Args:
-        code: Python source code to evaluate
-        profile: Strictness level (strict, balanced, permissive)
-    
-    Returns:
-        Dictionary with:
-        - compliant: bool
-        - failures: list of failure descriptions
-        - score: optional quality score
-    """
-    
+
+FORBIDDEN_DIRS = {"secrets"}
+
+
+def _hash(content: str) -> str:
+    return hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+
+def _contains_forbidden_path(path: Path) -> bool:
+    return any(part in FORBIDDEN_DIRS for part in path.parts)
+
+
+def _scan_directory(path: Path, profile: str):
+    violations = 0
     failures = []
-    
-    # Basic checks (expand these based on your standards)
-    
-    # Check 1: Spacing around operators
-    if profile in ["strict", "balanced"]:
-        if "=" in code and "= " not in code and " =" not in code:
-            # Simple heuristic - could be improved
-            lines = code.split('\n')
-            for i, line in enumerate(lines, 1):
-                if '=' in line and not any(x in line for x in [' = ', '==', '!=', '<=', '>=']):
-                    failures.append(f"Line {i}: Missing spaces around assignment operator")
-    
-    # Check 2: Function parameter spacing
-    if profile == "strict":
-        if "def " in code:
-            lines = code.split('\n')
-            for i, line in enumerate(lines, 1):
-                if 'def ' in line and ',' in line and ', ' not in line:
-                    failures.append(f"Line {i}: Missing space after comma in function parameters")
-    
-    # Check 3: Missing docstrings
-    if profile in ["strict", "balanced"]:
-        if "def " in code:
-            lines = code.split('\n')
-            for i, line in enumerate(lines, 1):
-                if line.strip().startswith('def '):
-                    # Check if next non-empty line is a docstring
-                    next_lines = lines[i:]
-                    has_docstring = False
-                    for next_line in next_lines:
-                        stripped = next_line.strip()
-                        if stripped:
-                            if stripped.startswith('"""') or stripped.startswith("'''"):
-                                has_docstring = True
-                            break
-                    if not has_docstring:
-                        failures.append(f"Line {i}: Function missing docstring")
-    
+
+    for file in path.rglob("*"):
+        if not file.is_file():
+            continue
+
+        # 🚫 Forbidden path rule
+        if _contains_forbidden_path(file):
+            failures.append({
+                "rule": "FORBIDDEN_PATH",
+                "path": str(file),
+                "severity": "fail",
+            })
+            violations += 1
+            continue
+
+        try:
+            content = file.read_text()
+        except Exception:
+            continue
+
+        # Large file rule
+        if content.count("\n") > 500:
+            failures.append({
+                "rule": "FILE_TOO_LARGE",
+                "path": str(file),
+                "severity": "warning",
+            })
+            if profile == "strict":
+                violations += 1
+
+    return violations, failures
+
+
+def judge_code(
+    path: Path,
+    *,
+    profile: str = "strict",
+    repair_live: bool = False,
+    repair_dry_run: bool = False,
+):
+    path = Path(path)
+
+    violations = 0
+    failures = []
+    autofix_applied = False
+    audit = None
+    rule_id = None
+    files_modified = []
+
+    # =========================
+    # FORBIDDEN PATH (early exit)
+    # =========================
+    if _contains_forbidden_path(path):
+        failures.append({
+            "rule": "FORBIDDEN_PATH",
+            "path": str(path),
+            "severity": "fail",
+        })
+        return {
+            "compliant": False,
+            "violations": 1,
+            "failure_count": 1,
+            "failures": failures,
+            "autofix_applied": False,
+            "audit": None,
+            "rule_id": None,
+            "files_modified": [],
+        }
+
+    # =========================
+    # DIRECTORY TARGET
+    # =========================
+    if path.is_dir():
+        violations, failures = _scan_directory(path, profile)
+
+        return {
+            "compliant": violations == 0,
+            "violations": violations,
+            "failure_count": violations,
+            "failures": failures,
+            "autofix_applied": False,
+            "audit": None,
+            "rule_id": None,
+            "files_modified": [],
+        }
+
+    # =========================
+    # FILE TARGET
+    # =========================
+    content = path.read_text()
+
+    # Large file rule
+    if content.count("\n") > 500:
+        failures.append({
+            "rule": "FILE_TOO_LARGE",
+            "path": str(path),
+            "severity": "warning",
+        })
+        if profile == "strict":
+            violations += 1
+
+    # =========================
+    # Phase 5B — Safe auto-fix
+    # =========================
+    if (
+        profile == "strict"
+        and repair_live
+        and path.suffix == ".py"
+        and not _has_header(content)
+        and violations == 0
+    ):
+        before_hash = _hash(content)
+        new_content = HEADER + content
+        after_hash = _hash(new_content)
+
+        audit = {
+            "rule_id": HEADER_RULE_ID,
+            "file": str(path),
+            "before_hash": before_hash,
+            "after_hash": after_hash,
+            "mode": "dry-run" if repair_dry_run else "live",
+            "patch": HEADER,
+        }
+
+        rule_id = HEADER_RULE_ID
+
+        if not repair_dry_run:
+            path.write_text(new_content)
+            autofix_applied = True
+            files_modified.append(str(path))
+
     return {
-        "compliant": len(failures) == 0,
+        "compliant": violations == 0,
+        "violations": violations,
+        "failure_count": violations,
         "failures": failures,
-        "failure_count": len(failures),
-        "profile": profile
+        "autofix_applied": autofix_applied,
+        "audit": audit,
+        "rule_id": rule_id,
+        "files_modified": files_modified,
     }

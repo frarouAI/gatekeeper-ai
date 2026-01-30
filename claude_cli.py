@@ -1,94 +1,86 @@
 #!/usr/bin/env python3
+"""
+Gatekeeper AI — CLI
+Final, invariant-correct orchestration layer.
+"""
 
-import argparse
-import json
 import sys
+import json
+from pathlib import Path
 
-from scanner import scan_target
-from policy_engine import apply_policy_engine
-from repair_engine import propose_repairs, apply_repairs
-from claude_proposer import propose_repairs_with_claude
-
-
-MAX_REPAIR_ITERATIONS = 3
-AUDIT_LOG = ".gatekeeper/repair_audit.jsonl"
+from judge import judge_code
+from loop_controller import run_loop
 
 
-def run_gate_mode(target: str, repair: bool, propose: bool) -> int:
-    iteration = 0
-    previous_violations = None
+def main():
+    try:
+        args = sys.argv[1:]
+        if not args:
+            print(json.dumps({"error": "No path provided"}))
+            sys.exit(1)
 
-    while True:
-        findings = scan_target(target)
-        result = apply_policy_engine(findings)
-        summary = result["policy_summary"]
+        target = args[0]
+        profile = "strict"
+        enable_repair = False
+        dry_run = False
 
-        gate_output = {
-            "gate_pass": summary.violations == 0,
-            "violations": summary.violations,
-            "warnings": summary.warnings,
-            "checked_rules": summary.checked_rules,
-            "profile": summary.profile,
-            "iteration": iteration,
-        }
+        i = 1
+        while i < len(args):
+            arg = args[i]
+            if arg == "--profile" and i + 1 < len(args):
+                profile = args[i + 1]
+                i += 1
+            elif arg in ("--repair", "--repair-live"):
+                enable_repair = True
+            elif arg == "--repair-dry-run":
+                dry_run = True
+            i += 1
 
-        print(json.dumps(gate_output, indent=2))
+        # Single source of truth
+        judge_result = judge_code(target, profile=profile)
 
-        if gate_output["gate_pass"]:
-            return 0
+        violations = judge_result.get("violations")
+        if violations is None:
+            # backward compatibility
+            violations = judge_result.get("failure_count", 0)
 
-        if not repair or iteration >= MAX_REPAIR_ITERATIONS:
-            return 1
+        # Enforce invariant
+        gate_pass = violations == 0
 
-        if previous_violations is not None and summary.violations >= previous_violations:
-            return 1
-
-        previous_violations = summary.violations
-
-        # ---- Repair proposal phase ----
-        plans = propose_repairs(result["judgements"])
-
-        if propose:
-            claude_plans = propose_repairs_with_claude(
-                result["judgements"],
-                claude_client=None,  # injected later
+        # Wrap in loop only if needed
+        if enable_repair or Path(target).is_dir():
+            output = run_loop(
+                filepath=target,
+                judge_result=judge_result,
+                profile=profile,
+                enable_repair=enable_repair,
+                dry_run=dry_run,
+                max_iterations=1,
             )
-            plans.extend(claude_plans)
+        else:
+            output = judge_result.copy()
 
-        allowed_files = {j.finding_id for j in result["judgements"]}
+        # Enforce invariant AGAIN (cannot be overridden)
+        output["violations"] = violations
+        output["gate_pass"] = gate_pass
+        output["profile"] = profile
 
-        changed = apply_repairs(
-            plans=plans,
-            allowed_files=allowed_files,
-            audit_log_path=AUDIT_LOG,
-            iteration=iteration,
-        )
+        # Phase 5B envelope (still inert)
+        output.setdefault("autofix_applied", False)
+        output.setdefault("rule_id", None)
+        output.setdefault("files_modified", [])
+        output.setdefault("audit", None)
 
-        if not changed:
-            return 1
+        print(json.dumps(output, indent=2))
+        sys.exit(0 if gate_pass else 1)
 
-        iteration += 1
-
-
-def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("target", nargs="?", help="Target file or directory")
-    parser.add_argument("--gate", action="store_true")
-    parser.add_argument("--repair", action="store_true")
-    parser.add_argument(
-        "--propose",
-        action="store_true",
-        help="Allow Claude to propose RepairPlans (proposal-only)",
-    )
-
-    args = parser.parse_args()
-
-    if args.gate:
-        return run_gate_mode(args.target, args.repair, args.propose)
-
-    print({"success": True})
-    return 0
+    except Exception as e:
+        print(json.dumps({
+            "error": str(e),
+            "gate_pass": False,
+        }))
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

@@ -1,0 +1,19 @@
+✖ Gatekeeper failed
+
+Summary:
+  This change modifies files under forbidden paths. Forbidden paths are absolute and dominate all enforcement logic.
+
+Details:
+  Files:
+    secrets/token.py
+
+  Rules:
+    FORBIDDEN_PATH
+
+  Facts:
+    One or more modified files are located in forbidden paths
+    Forbidden paths cannot be repaired or bypassed
+    Autofix is intentionally disabled for this class of violation
+
+Autofix:
+  Disabled (forbidden paths are non-negotiable)
