@@ -1,7 +1,0 @@
-include README.md
-include LICENSE
-include pyproject.toml
-recursive-include gatekeeper_ai/schemas *.json
-recursive-include gatekeeper_ai/migrations *.py
-recursive-exclude * __pycache__
-recursive-exclude * *.py[co]
