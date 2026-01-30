@@ -20,4 +20,9 @@ whatsapp-bot/*.log
 
 # OS
 .DS_Store
+_smoke/
+_smoke_test.py
+*.log
+gatekeeper_ai/schemas/
+schemas/
 
