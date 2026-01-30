@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Gatekeeper Configuration Schema",
+  "type": "object",
+  "additionalProperties": false,
+
+  "required": ["version", "profile", "ci", "repair", "paths"],
+
+  "properties": {
+    "version": {
+      "type": "integer",
+      "enum": [1]
+    },
+
+    "profile": {
+      "type": "string",
+      "enum": ["startup", "strict", "relaxed"]
+    },
+
+    "model": {
+      "type": "string",
+      "description": "LLM model identifier (e.g. claude-3-5-sonnet-20241022)"
+    },
+
+    "ci": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "baseline_max_drop": {
+          "type": "number",
+          "minimum": 0.0
+        }
+      }
+    },
+
+    "repair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "mode", "max_iterations"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "mode": {
+          "type": "string",
+          "enum": ["dry-run", "live"]
+        },
+        "max_iterations": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "confidence_threshold": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        }
+      }
+    },
+
+    "paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["include"],
+      "properties": {
+        "include": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "exclude": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}
