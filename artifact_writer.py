@@ -55,3 +55,23 @@ def write_repair_artifact(data: dict, file_path: str) -> None:
     import json
     with artifact_path.open("w") as f:
         json.dump(data, f, indent=2)
+
+
+def write_repair_artifact(data: dict, file_path: str) -> None:
+    """
+    Write repair loop artifact (compatibility shim).
+    
+    This is used by loop_controller.py for repair iterations.
+    """
+    _ensure_root()
+    
+    from datetime import datetime, timezone
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    
+    # Sanitize file path for filename
+    safe_name = file_path.replace("/", "_").replace(".", "_")
+    artifact_path = ARTIFACT_ROOT / f"repair_{timestamp}_{safe_name}.json"
+    
+    import json
+    with artifact_path.open("w") as f:
+        json.dump(data, f, indent=2)
