@@ -1,74 +1,138 @@
-"""
-Policy Engine v1
+from dataclasses import dataclass
+from typing import List, Dict, Optional
+import os
 
-Evaluates CI results against global + owner-based rules.
-"""
-
-import json
-from pathlib import Path
-from typing import Dict, List
-
-POLICY_FILE = Path(".gatekeeper/policy.json")
-SCHEMA_FILE = Path("schemas/policy_v1.json")
+from profiles import resolve_profile
 
 
-def load_policy() -> Dict:
-    if not POLICY_FILE.exists():
-        return {
-            "schema_version": "policy-v1",
-            "rules": {}
-        }
+# ----------------------------
+# Data contracts
+# ----------------------------
 
-    return json.loads(POLICY_FILE.read_text())
+@dataclass(frozen=True)
+class Finding:
+    id: str
+    type: str
+    path: str
+    signal: str
+    metadata: Dict
 
 
-def evaluate_policy(
-    policy: Dict,
-    baseline_score: float,
-    current_score: float,
-    blocking_issues: int,
-    owners_report: Dict[str, Dict]
-) -> Dict:
-    violations: List[str] = []
-    rules = policy.get("rules", {})
+@dataclass(frozen=True)
+class PolicyJudgement:
+    finding_id: str
+    rule_id: str
+    status: str          # pass | warn | fail
+    confidence: float
+    reason: str
+    suggested_fix: Optional[str] = None
 
-    # -----------------------------
-    # Global rules
-    # -----------------------------
-    global_rules = rules.get("global", {})
 
-    max_blocking = global_rules.get("max_blocking_files")
-    if max_blocking is not None and blocking_issues > max_blocking:
-        violations.append(
-            f"Blocking files exceed global limit ({blocking_issues} > {max_blocking})"
+@dataclass
+class PolicySummary:
+    checked_rules: int
+    violations: int
+    warnings: int
+    passes: int
+    profile: str
+
+
+# ----------------------------
+# Policy rules (UNCHANGED)
+# ----------------------------
+
+FORBIDDEN_PATHS = ("secrets", "private", ".env")
+MAX_LINE_COUNT = 500
+
+
+def _normalized_path(path: str) -> str:
+    norm = os.path.normpath(path)
+    return "/".join(norm.split(os.sep))
+
+
+def rule_forbidden_path(finding: Finding) -> Optional[PolicyJudgement]:
+    norm_path = _normalized_path(finding.path)
+    if any(f"/{p}/" in f"/{norm_path}/" for p in FORBIDDEN_PATHS):
+        return PolicyJudgement(
+            finding_id=finding.id,
+            rule_id="FORBIDDEN_PATH",
+            status="fail",
+            confidence=0.98,
+            reason="Files may not reside in forbidden or sensitive directories.",
         )
+    return None
 
-    # -----------------------------
-    # Owner rules
-    # -----------------------------
-    owner_rules = rules.get("owners", {})
 
-    for owner, data in owners_report.items():
-        rules_for_owner = owner_rules.get(owner)
-        if not rules_for_owner:
-            continue
+def rule_missing_metadata(finding: Finding) -> Optional[PolicyJudgement]:
+    if finding.signal == "missing_metadata":
+        return PolicyJudgement(
+            finding_id=finding.id,
+            rule_id="REQUIRED_METADATA_MISSING",
+            status="warn",
+            confidence=0.85,
+            reason="Required metadata is missing from this file.",
+        )
+    return None
 
-        files = len(set(data.get("files", [])))
-        failures = data.get("failure_count", 0)
 
-        max_files = rules_for_owner.get("max_blocking_files")
-        if max_files is not None and files > max_files:
-            violations.append(
-                f"Owner '{owner}' exceeds blocking files limit ({files} > {max_files})"
-            )
+def rule_file_too_large(finding: Finding) -> Optional[PolicyJudgement]:
+    line_count = finding.metadata.get("line_count")
+    if isinstance(line_count, int) and line_count > MAX_LINE_COUNT:
+        return PolicyJudgement(
+            finding_id=finding.id,
+            rule_id="FILE_TOO_LARGE",
+            status="warn",
+            confidence=0.75,
+            reason="File exceeds the recommended maximum line count.",
+        )
+    return None
 
-        max_failures = rules_for_owner.get("max_failures")
-        if max_failures is not None and failures > max_failures:
-            violations.append(
-                f"Owner '{owner}' exceeds failure limit ({failures} > {max_failures})"
-            )
+
+POLICY_RULES = [
+    rule_forbidden_path,
+    rule_missing_metadata,
+    rule_file_too_large,
+]
+
+
+# ----------------------------
+# Policy engine (profile-aware aggregation ONLY)
+# ----------------------------
+
+def apply_policy_engine(findings: List[Finding]) -> Dict:
+    judgements: List[PolicyJudgement] = []
+
+    for finding in findings:
+        for rule in POLICY_RULES:
+            judgement = rule(finding)
+            if judgement:
+                judgements.append(judgement)
+
+    violations = 0
+    warnings = 0
+
+    for j in judgements:
+        profile = resolve_profile(j.finding_id)
+        if j.status == "fail":
+            violations += 1
+        elif j.status == "warn":
+            warnings += 1
+            if profile.fail_on_warnings:
+                violations += 1
+
+    profile_name = (
+        resolve_profile(findings[0].path).name if findings else "default"
+    )
+
+    summary = PolicySummary(
+        checked_rules=len(POLICY_RULES),
+        violations=violations,
+        warnings=warnings,
+        passes=len(POLICY_RULES) - violations - warnings,
+        profile=profile_name,
+    )
 
     return {
-        "allowed": len(violations) == 0,
-        "violations": violations
+        "policy_summary": summary,
+        "judgements": judgements,
     }

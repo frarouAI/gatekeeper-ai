@@ -4,6 +4,11 @@ README.md
 claude_cli.py
 pyproject.toml
 setup.py
+engines/__init__.py
+engines/executor.py
+engines/registry.py
+engines/v1.py
+engines/v2.py
 gatekeeper_ai/__init__.py
 gatekeeper_ai.egg-info/PKG-INFO
 gatekeeper_ai.egg-info/SOURCES.txt
@@ -11,3 +16,4 @@ gatekeeper_ai.egg-info/dependency_links.txt
 gatekeeper_ai.egg-info/entry_points.txt
 gatekeeper_ai.egg-info/requires.txt
 gatekeeper_ai.egg-info/top_level.txt
+gatekeeper_ai/schemas/config_v1.json
