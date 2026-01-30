@@ -1,0 +1,25 @@
+{
+  "schema_version": "repair-artifact.v1",
+  "timestamp": "2026-01-28T19:16:41.226468+00:00",
+  "filepath": "bad_code.py",
+  "profile": "strict",
+  "initial_failures": {
+    "total": 0,
+    "blocking": 0,
+    "failures": []
+  },
+  "final_failures": {
+    "total": 0,
+    "blocking": 0,
+    "failures": []
+  },
+  "iterations_used": 0,
+  "repairs_proposed": [],
+  "repairs_applied": [],
+  "repair_confidence": 1.0,
+  "improved": false,
+  "diff": {
+    "before": "def add(x, y):\n    \"\"\"Add two numbers together.\"\"\"\n    return x+y\n\nresult = add(1,2)\nprint(result)\n",
+    "after": "def add(x, y):\n    \"\"\"Add two numbers together.\"\"\"\n    return x+y\n\nresult = add(1,2)\nprint(result)\n"
+  }
+}

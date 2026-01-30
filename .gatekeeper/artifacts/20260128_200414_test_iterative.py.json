@@ -1,0 +1,90 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.1",
+  "timestamp": "2026-01-28T20:04:14.340138+00:00",
+  "filepath": "test_iterative.py",
+  "mode": "repair-live",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 3,
+    "final_failure_count": 0,
+    "iterations_used": 2,
+    "repair_confidence": 1.0,
+    "improved": true,
+    "fully_repaired": true,
+    "repair_method": "iterative"
+  },
+  "failures": {
+    "initial": [
+      "Line 2: Missing spaces around assignment operator",
+      "Line 1: Missing space after comma in function parameters",
+      "Line 1: Function missing docstring"
+    ],
+    "final": []
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 3,
+      "repairs_proposed": 3,
+      "repairs": [
+        {
+          "line": 1,
+          "old": "def buggy(x,y,z):",
+          "new": "def buggy(x, y, z):",
+          "reason": "Missing space after comma in function parameters",
+          "category": "spacing",
+          "blocking": true
+        },
+        {
+          "line": 2,
+          "old": "    result=x+y+z",
+          "new": "    result = x + y + z",
+          "reason": "Missing spaces around assignment operator and arithmetic operators",
+          "category": "spacing",
+          "blocking": true
+        },
+        {
+          "line": 2,
+          "old": "def buggy(x, y, z):",
+          "new": "def buggy(x, y, z):\n    \"\"\"Function docstring.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        }
+      ]
+    },
+    {
+      "iteration": 2,
+      "failures_before": 1,
+      "repairs_proposed": 1,
+      "repairs": [
+        {
+          "line": 1,
+          "old": "def buggy(x, y, z):",
+          "new": "def buggy(x, y, z):\n    \"\"\"Function docstring.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "def buggy(x,y,z):\n    result=x+y+z\n    return result\n",
+    "after": "def buggy(x, y, z):\n    \"\"\"Function docstring.\"\"\"\n    result = x + y + z\n    return result\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:04:14.340138+00:00",
+    "token_usage": {
+      "total_tokens": null,
+      "estimated": false,
+      "note": "Token tracking not available in v1.0"
+    },
+    "git_context": {
+      "branch": null,
+      "commit": null,
+      "note": "Git tracking not available in v1.0"
+    }
+  }
+}

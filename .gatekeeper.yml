@@ -1,0 +1,26 @@
+version: 1
+profile: strict
+
+ci:
+  enabled: true
+  fail_on_non_compliant: false  # Just report for now
+  fail_on_confidence_below: 0.0  # Disable for testing
+
+repair:
+  enabled: false  # Disable repair to just see judge results
+  mode: dry-run
+  max_iterations: 3
+  confidence_threshold: 0.9
+
+artifacts:
+  retention_days: 180
+  store_diff: true
+  validate_schema: true
+
+paths:
+  include:
+    - "judge.py"
+    - "repair_schema.py"
+    - "loop_controller.py"
+  exclude:
+    - "test_*.py"

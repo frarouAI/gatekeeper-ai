@@ -1,0 +1,55 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:28:41.889677+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/migrations/v1_0_to_v1_1.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 2,
+    "final_failure_count": 0,
+    "iterations_used": 1,
+    "repair_confidence": 1.0,
+    "improved": true,
+    "fully_repaired": true
+  },
+  "failures": {
+    "initial": [
+      "Line 18: Function missing docstring",
+      "Line 22: Function missing docstring"
+    ],
+    "final": []
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 2,
+      "repairs_proposed": 2,
+      "repairs": [
+        {
+          "line": 18,
+          "old": "    def from_version(self) -> str:",
+          "new": "    def from_version(self) -> str:\n        \"\"\"Return the source version for this migration.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 22,
+          "old": "    def to_version(self) -> str:",
+          "new": "    def to_version(self) -> str:\n        \"\"\"Return the target version for this migration.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "\"\"\"\nMigration v1.0 \u2192 v1.1\n\nChanges:\n- Add \"repair_method\" field to summary (value: \"iterative\" or \"single-pass\")\n- Add \"token_usage\" to metadata (for cost tracking)\n- Add \"git_context\" to metadata (for commit tracking)\n\"\"\"\n\nfrom typing import Dict\nfrom migrations.migration_base import Migration\n\n\nclass MigrationV1_0_to_V1_1(Migration):\n    \"\"\"Migrate artifacts from v1.0 to v1.1.\"\"\"\n    \n    @property\n    def from_version(self) -> str:\n        return \"gatekeeper-artifact-v1.0\"\n    \n    @property\n    def to_version(self) -> str:\n        return \"gatekeeper-artifact-v1.1\"\n    \n    def migrate(self, artifact: Dict) -> Dict:\n        \"\"\"Upgrade v1.0 \u2192 v1.1.\"\"\"\n        \n        if not self.validate_source(artifact):\n            raise ValueError(f\"Artifact is not version {self.from_version}\")\n        \n        # Create new artifact with v1.1 schema\n        migrated = artifact.copy()\n        \n        # Update schema version\n        migrated[\"schema_version\"] = self.to_version\n        \n        # Add new fields to summary\n        summary = migrated.get(\"summary\", {})\n        \n        # Infer repair method from iterations\n        iterations = summary.get(\"iterations_used\", 0)\n        summary[\"repair_method\"] = \"iterative\" if iterations > 1 else \"single-pass\"\n        \n        migrated[\"summary\"] = summary\n        \n        # Add new fields to metadata\n        metadata = migrated.get(\"metadata\", {})\n        \n        # Add token usage (unknown for historical data)\n        metadata[\"token_usage\"] = {\n            \"total_tokens\": None,\n            \"estimated\": False,\n            \"note\": \"Token tracking not available in v1.0\"\n        }\n        \n        # Add git context (unknown for historical data)\n        metadata[\"git_context\"] = {\n            \"branch\": None,\n            \"commit\": None,\n            \"note\": \"Git tracking not available in v1.0\"\n        }\n        \n        migrated[\"metadata\"] = metadata\n        \n        return migrated\n    \n    def rollback(self, artifact: Dict) -> Dict:\n        \"\"\"Downgrade v1.1 \u2192 v1.0.\"\"\"\n        \n        if not self.validate_target(artifact):\n            raise ValueError(f\"Artifact is not version {self.to_version}\")\n        \n        # Create rolled-back artifact\n        rolled_back = artifact.copy()\n        \n        # Revert schema version\n        rolled_back[\"schema_version\"] = self.from_version\n        \n        # Remove v1.1 fields from summary\n        summary = rolled_back.get(\"summary\", {})\n        summary.pop(\"repair_method\", None)\n        rolled_back[\"summary\"] = summary\n        \n        # Remove v1.1 fields from metadata\n        metadata = rolled_back.get(\"metadata\", {})\n        metadata.pop(\"token_usage\", None)\n        metadata.pop(\"git_context\", None)\n        rolled_back[\"metadata\"] = metadata\n        \n        return rolled_back\n",
+    "after": "\"\"\"\nMigration v1.0 \u2192 v1.1\n\nChanges:\n- Add \"repair_method\" field to summary (value: \"iterative\" or \"single-pass\")\n- Add \"token_usage\" to metadata (for cost tracking)\n- Add \"git_context\" to metadata (for commit tracking)\n\"\"\"\n\nfrom typing import Dict\nfrom migrations.migration_base import Migration\n\n\nclass MigrationV1_0_to_V1_1(Migration):\n    \"\"\"Migrate artifacts from v1.0 to v1.1.\"\"\"\n    \n    @property\n    def from_version(self) -> str:\n        \"\"\"Return the source version for this migration.\"\"\"\n        return \"gatekeeper-artifact-v1.0\"\n    \n    @property\n    def to_version(self) -> str:\n        \"\"\"Return the target version for this migration.\"\"\"\n        return \"gatekeeper-artifact-v1.1\"\n    \n    def migrate(self, artifact: Dict) -> Dict:\n        \"\"\"Upgrade v1.0 \u2192 v1.1.\"\"\"\n        \n        if not self.validate_source(artifact):\n            raise ValueError(f\"Artifact is not version {self.from_version}\")\n        \n        # Create new artifact with v1.1 schema\n        migrated = artifact.copy()\n        \n        # Update schema version\n        migrated[\"schema_version\"] = self.to_version\n        \n        # Add new fields to summary\n        summary = migrated.get(\"summary\", {})\n        \n        # Infer repair method from iterations\n        iterations = summary.get(\"iterations_used\", 0)\n        summary[\"repair_method\"] = \"iterative\" if iterations > 1 else \"single-pass\"\n        \n        migrated[\"summary\"] = summary\n        \n        # Add new fields to metadata\n        metadata = migrated.get(\"metadata\", {})\n        \n        # Add token usage (unknown for historical data)\n        metadata[\"token_usage\"] = {\n            \"total_tokens\": None,\n            \"estimated\": False,\n            \"note\": \"Token tracking not available in v1.0\"\n        }\n        \n        # Add git context (unknown for historical data)\n        metadata[\"git_context\"] = {\n            \"branch\": None,\n            \"commit\": None,\n            \"note\": \"Git tracking not available in v1.0\"\n        }\n        \n        migrated[\"metadata\"] = metadata\n        \n        return migrated\n    \n    def rollback(self, artifact: Dict) -> Dict:\n        \"\"\"Downgrade v1.1 \u2192 v1.0.\"\"\"\n        \n        if not self.validate_target(artifact):\n            raise ValueError(f\"Artifact is not version {self.to_version}\")\n        \n        # Create rolled-back artifact\n        rolled_back = artifact.copy()\n        \n        # Revert schema version\n        rolled_back[\"schema_version\"] = self.from_version\n        \n        # Remove v1.1 fields from summary\n        summary = rolled_back.get(\"summary\", {})\n        summary.pop(\"repair_method\", None)\n        rolled_back[\"summary\"] = summary\n        \n        # Remove v1.1 fields from metadata\n        metadata = rolled_back.get(\"metadata\", {})\n        metadata.pop(\"token_usage\", None)\n        metadata.pop(\"git_context\", None)\n        rolled_back[\"metadata\"] = metadata\n        \n        return rolled_back\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:28:41.889677+00:00"
+  }
+}

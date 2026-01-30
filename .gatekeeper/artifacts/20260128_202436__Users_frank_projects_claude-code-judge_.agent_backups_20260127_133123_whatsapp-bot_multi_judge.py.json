@@ -1,0 +1,100 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:24:36.280542+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/.agent_backups/20260127_133123/whatsapp-bot/multi_judge.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 7,
+    "final_failure_count": 0,
+    "iterations_used": 1,
+    "repair_confidence": 1.0,
+    "improved": true,
+    "fully_repaired": true
+  },
+  "failures": {
+    "initial": [
+      "Line 28: Function missing docstring",
+      "Line 45: Function missing docstring",
+      "Line 77: Function missing docstring",
+      "Line 86: Function missing docstring",
+      "Line 109: Function missing docstring",
+      "Line 136: Function missing docstring",
+      "Line 202: Function missing docstring"
+    ],
+    "final": []
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 7,
+      "repairs_proposed": 7,
+      "repairs": [
+        {
+          "line": 28,
+          "old": "def determine_context(file_path: str | None) -> str:",
+          "new": "def determine_context(file_path: str | None) -> str:\n    \"\"\"Determine the context type based on file path.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 45,
+          "old": "    def __init__(",
+          "new": "    def __init__(\n        \"\"\"Initialize the MultiAgentCodeJudge.\"\"\",",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 77,
+          "old": "    def _cache_key(self, code: str, context: str) -> str:",
+          "new": "    def _cache_key(self, code: str, context: str) -> str:\n        \"\"\"Generate cache key for code and context.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 86,
+          "old": "    def _build_prompt(self, agent_name: str, code: str, context: str) -> str:",
+          "new": "    def _build_prompt(self, agent_name: str, code: str, context: str) -> str:\n        \"\"\"Build prompt for agent evaluation.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 109,
+          "old": "    def _run_agent(self, agent_name: str, code: str, context: str) -> dict:",
+          "new": "    def _run_agent(self, agent_name: str, code: str, context: str) -> dict:\n        \"\"\"Run a single agent evaluation.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 136,
+          "old": "    def judge(self, code: str, file_path: str | None = None) -> dict:",
+          "new": "    def judge(self, code: str, file_path: str | None = None) -> dict:\n        \"\"\"Judge code using all agents.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 202,
+          "old": "    def gate_repo(self, files: Dict[str, str]) -> dict:",
+          "new": "    def gate_repo(self, files: Dict[str, str]) -> dict:\n        \"\"\"Gate repository by judging all files.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "import json\nimport hashlib\nfrom datetime import datetime, timezone\nfrom typing import Dict\n\nfrom claude_backend import ClaudeBackend\nfrom agents import AGENTS, AGENT_POLICY, PROFILES\nfrom verdict_cache import VerdictCache\nfrom verdict_signer import VerdictSigner\n\n\nSCHEMA_VERSION = \"1.2\"\n\nJUDGE_INTERNAL_FILES = {\n    \"multi_judge.py\",\n    \"agents.py\",\n    \"claude_backend.py\",\n    \"verdict_cache.py\",\n    \"verdict_signer.py\",\n    \"usage_meter.py\",\n    \"claude_cli.py\",\n    \"html_report.py\",\n    \"json_judge.py\",\n    \"clawdbot.py\",\n}\n\n\ndef determine_context(file_path: str | None) -> str:\n    if not file_path:\n        return \"model_code\"\n\n    import os\n    name = os.path.basename(file_path)\n\n    if name in JUDGE_INTERNAL_FILES:\n        return \"judge_internal\"\n\n    if \"/engines/\" in file_path or file_path.startswith(\"engines/\"):\n        return \"judge_internal\"\n\n    return \"model_code\"\n\n\nclass MultiAgentCodeJudge:\n    def __init__(\n        self,\n        model: str = \"claude-sonnet-4-20250514\",\n        profile: str = \"startup\",\n        engine_version: str = \"v1\",\n        enable_cache: bool = True,\n        enable_metering: bool = True,\n        sign_key: str | None = None,\n        verify: bool = False,\n        max_tokens: int = 1500,\n    ):\n        if profile not in PROFILES:\n            raise ValueError(f\"Unknown profile: {profile}\")\n\n        self.profile_name = profile\n        self.profile = PROFILES[profile]\n        self.threshold = self.profile[\"threshold\"]\n\n        self.engine_version = engine_version\n        self.name = f\"claude-code-judge:{engine_version}\"\n\n        self.backend = ClaudeBackend(model=model, max_tokens=max_tokens)\n\n        self.enable_cache = enable_cache\n        self.enable_metering = enable_metering\n\n        self.cache = VerdictCache() if enable_cache else None\n        self.signer = VerdictSigner(sign_key.encode()) if sign_key else None\n        self.verify_signatures = verify\n\n    # ---------- internals ----------\n\n    def _cache_key(self, code: str, context: str) -> str:\n        h = hashlib.sha256()\n        h.update(code.encode(\"utf-8\"))\n        h.update(context.encode(\"utf-8\"))\n        h.update(self.profile_name.encode(\"utf-8\"))\n        h.update(self.engine_version.encode(\"utf-8\"))\n        h.update(self.backend.model.encode(\"utf-8\"))\n        return h.hexdigest()\n\n    def _build_prompt(self, agent_name: str, code: str, context: str) -> str:\n        return f\"\"\"\nReview the following Python code.\n\nCONTEXT: {context}\n\nReturn STRICT JSON in this exact schema:\n{{\n  \"agent\": \"{agent_name}\",\n  \"pass\": true | false,\n  \"score\": 0-100,\n  \"issues\": [\"string\", ...],\n  \"summary\": \"string\"\n}}\n\nRules:\n- No markdown\n- No commentary outside JSON\n\nCODE:\n{code}\n\"\"\"\n\n    def _run_agent(self, agent_name: str, code: str, context: str) -> dict:\n        agent = AGENTS[agent_name]\n\n        if \"prompt_fn\" in agent:\n            system_prompt = agent[\"prompt_fn\"](context)\n        else:\n            system_prompt = agent[\"system_prompt\"]\n\n        user_prompt = self._build_prompt(agent_name, code, context)\n\n        raw = self.backend.judge(system_prompt, user_prompt)\n\n        try:\n            data = json.loads(raw)\n        except Exception:\n            return {\n                \"agent\": agent_name,\n                \"pass\": False,\n                \"score\": 0,\n                \"issues\": [\"Model failed to return valid JSON\"],\n                \"summary\": \"Invalid JSON response from model.\",\n            }\n\n        return data\n\n    # ---------- public API ----------\n\n    def judge(self, code: str, file_path: str | None = None) -> dict:\n        context = determine_context(file_path)\n\n        cache_hit = False\n        key = None\n\n        if self.cache:\n            key = self._cache_key(code, context)\n            cached = self.cache.get(key)\n            if cached:\n                cached[\"cache_hit\"] = True\n                return cached\n\n        verdicts = []\n        blocking_failures = []\n\n        total_weighted_score = 0.0\n        total_weight = 0.0\n\n        for agent_name in AGENTS:\n            result = self._run_agent(agent_name, code, context)\n            verdicts.append(result)\n\n            policy = AGENT_POLICY[agent_name]\n            weight = policy[\"weight\"]\n\n            total_weighted_score += result[\"score\"] * weight\n            total_weight += weight\n\n            if policy[\"blocking\"] and not result[\"pass\"]:\n                blocking_failures.append(agent_name)\n\n        average_score = round(total_weighted_score / total_weight, 2)\n\n        policy_pass = len(blocking_failures) == 0\n        overall_pass = policy_pass and average_score >= self.threshold\n\n        result = {\n            \"schema_version\": SCHEMA_VERSION,\n            \"engine\": self.name,\n            \"engine_version\": self.engine_version,\n            \"model\": self.backend.model,\n            \"profile\": self.profile_name,\n            \"context\": context,\n            \"timestamp\": datetime.now(timezone.utc).isoformat(),\n            \"overall_pass\": overall_pass,\n            \"policy_pass\": policy_pass,\n            \"average_score\": average_score,\n            \"threshold\": self.threshold,\n            \"blocking_failures\": blocking_failures,\n            \"verdicts\": verdicts,\n            \"cache_hit\": cache_hit,\n        }\n\n        if self.signer:\n            result = self.signer.sign(result)\n\n        if self.cache and key:\n            result[\"cache_hit\"] = False\n            self.cache.set(key, result)\n\n        return result\n\n    # ---------- MONETIZATION FEATURE ----------\n    # Gate mode = the product\n\n    def gate_repo(self, files: Dict[str, str]) -> dict:\n        blocking_agents = []\n        total_scores = []\n\n        for path, code in files.items():\n            verdict = self.judge(code, file_path=path)\n            total_scores.append(verdict[\"average_score\"])\n\n            for agent in verdict[\"blocking_failures\"]:\n                if agent not in blocking_agents:\n                    blocking_agents.append(agent)\n\n        avg_score = round(sum(total_scores) / max(len(total_scores), 1), 2)\n\n        gate_pass = len(blocking_agents) == 0 and avg_score >= self.threshold\n\n        return {\n            \"gate_pass\": gate_pass,\n            \"engine\": self.engine_version,\n            \"profile\": self.profile_name,\n            \"blocking_agents\": blocking_agents,\n            \"average_score\": avg_score,\n            \"threshold\": self.threshold,\n            \"files\": list(files.keys()),\n        }\n",
+    "after": "import json\nimport hashlib\nfrom datetime import datetime, timezone\nfrom typing import Dict\n\nfrom claude_backend import ClaudeBackend\nfrom agents import AGENTS, AGENT_POLICY, PROFILES\nfrom verdict_cache import VerdictCache\nfrom verdict_signer import VerdictSigner\n\n\nSCHEMA_VERSION = \"1.2\"\n\nJUDGE_INTERNAL_FILES = {\n    \"multi_judge.py\",\n    \"agents.py\",\n    \"claude_backend.py\",\n    \"verdict_cache.py\",\n    \"verdict_signer.py\",\n    \"usage_meter.py\",\n    \"claude_cli.py\",\n    \"html_report.py\",\n    \"json_judge.py\",\n    \"clawdbot.py\",\n}\n\n\ndef determine_context(file_path: str | None) -> str:\n    \"\"\"Determine the context type based on file path.\"\"\"\n    if not file_path:\n        return \"model_code\"\n\n    import os\n    name = os.path.basename(file_path)\n\n    if name in JUDGE_INTERNAL_FILES:\n        return \"judge_internal\"\n\n    if \"/engines/\" in file_path or file_path.startswith(\"engines/\"):\n        return \"judge_internal\"\n\n    return \"model_code\"\n\n\nclass MultiAgentCodeJudge:\n    def __init__(\n        \"\"\"Initialize the MultiAgentCodeJudge.\"\"\",\n        self,\n        model: str = \"claude-sonnet-4-20250514\",\n        profile: str = \"startup\",\n        engine_version: str = \"v1\",\n        enable_cache: bool = True,\n        enable_metering: bool = True,\n        sign_key: str | None = None,\n        verify: bool = False,\n        max_tokens: int = 1500,\n    ):\n        if profile not in PROFILES:\n            raise ValueError(f\"Unknown profile: {profile}\")\n\n        self.profile_name = profile\n        self.profile = PROFILES[profile]\n        self.threshold = self.profile[\"threshold\"]\n\n        self.engine_version = engine_version\n        self.name = f\"claude-code-judge:{engine_version}\"\n\n        self.backend = ClaudeBackend(model=model, max_tokens=max_tokens)\n\n        self.enable_cache = enable_cache\n        self.enable_metering = enable_metering\n\n        self.cache = VerdictCache() if enable_cache else None\n        self.signer = VerdictSigner(sign_key.encode()) if sign_key else None\n        self.verify_signatures = verify\n\n    # ---------- internals ----------\n\n    def _cache_key(self, code: str, context: str) -> str:\n        \"\"\"Generate cache key for code and context.\"\"\"\n        h = hashlib.sha256()\n        h.update(code.encode(\"utf-8\"))\n        h.update(context.encode(\"utf-8\"))\n        h.update(self.profile_name.encode(\"utf-8\"))\n        h.update(self.engine_version.encode(\"utf-8\"))\n        h.update(self.backend.model.encode(\"utf-8\"))\n        return h.hexdigest()\n\n    def _build_prompt(self, agent_name: str, code: str, context: str) -> str:\n        \"\"\"Build prompt for agent evaluation.\"\"\"\n        return f\"\"\"\nReview the following Python code.\n\nCONTEXT: {context}\n\nReturn STRICT JSON in this exact schema:\n{{\n  \"agent\": \"{agent_name}\",\n  \"pass\": true | false,\n  \"score\": 0-100,\n  \"issues\": [\"string\", ...],\n  \"summary\": \"string\"\n}}\n\nRules:\n- No markdown\n- No commentary outside JSON\n\nCODE:\n{code}\n\"\"\"\n\n    def _run_agent(self, agent_name: str, code: str, context: str) -> dict:\n        \"\"\"Run a single agent evaluation.\"\"\"\n        agent = AGENTS[agent_name]\n\n        if \"prompt_fn\" in agent:\n            system_prompt = agent[\"prompt_fn\"](context)\n        else:\n            system_prompt = agent[\"system_prompt\"]\n\n        user_prompt = self._build_prompt(agent_name, code, context)\n\n        raw = self.backend.judge(system_prompt, user_prompt)\n\n        try:\n            data = json.loads(raw)\n        except Exception:\n            return {\n                \"agent\": agent_name,\n                \"pass\": False,\n                \"score\": 0,\n                \"issues\": [\"Model failed to return valid JSON\"],\n                \"summary\": \"Invalid JSON response from model.\",\n            }\n\n        return data\n\n    # ---------- public API ----------\n\n    def judge(self, code: str, file_path: str | None = None) -> dict:\n        \"\"\"Judge code using all agents.\"\"\"\n        context = determine_context(file_path)\n\n        cache_hit = False\n        key = None\n\n        if self.cache:\n            key = self._cache_key(code, context)\n            cached = self.cache.get(key)\n            if cached:\n                cached[\"cache_hit\"] = True\n                return cached\n\n        verdicts = []\n        blocking_failures = []\n\n        total_weighted_score = 0.0\n        total_weight = 0.0\n\n        for agent_name in AGENTS:\n            result = self._run_agent(agent_name, code, context)\n            verdicts.append(result)\n\n            policy = AGENT_POLICY[agent_name]\n            weight = policy[\"weight\"]\n\n            total_weighted_score += result[\"score\"] * weight\n            total_weight += weight\n\n            if policy[\"blocking\"] and not result[\"pass\"]:\n                blocking_failures.append(agent_name)\n\n        average_score = round(total_weighted_score / total_weight, 2)\n\n        policy_pass = len(blocking_failures) == 0\n        overall_pass = policy_pass and average_score >= self.threshold\n\n        result = {\n            \"schema_version\": SCHEMA_VERSION,\n            \"engine\": self.name,\n            \"engine_version\": self.engine_version,\n            \"model\": self.backend.model,\n            \"profile\": self.profile_name,\n            \"context\": context,\n            \"timestamp\": datetime.now(timezone.utc).isoformat(),\n            \"overall_pass\": overall_pass,\n            \"policy_pass\": policy_pass,\n            \"average_score\": average_score,\n            \"threshold\": self.threshold,\n            \"blocking_failures\": blocking_failures,\n            \"verdicts\": verdicts,\n            \"cache_hit\": cache_hit,\n        }\n\n        if self.signer:\n            result = self.signer.sign(result)\n\n        if self.cache and key:\n            result[\"cache_hit\"] = False\n            self.cache.set(key, result)\n\n        return result\n\n    # ---------- MONETIZATION FEATURE ----------\n    # Gate mode = the product\n\n    def gate_repo(self, files: Dict[str, str]) -> dict:\n        \"\"\"Gate repository by judging all files.\"\"\"\n        blocking_agents = []\n        total_scores = []\n\n        for path, code in files.items():\n            verdict = self.judge(code, file_path=path)\n            total_scores.append(verdict[\"average_score\"])\n\n            for agent in verdict[\"blocking_failures\"]:\n                if agent not in blocking_agents:\n                    blocking_agents.append(agent)\n\n        avg_score = round(sum(total_scores) / max(len(total_scores), 1), 2)\n\n        gate_pass = len(blocking_agents) == 0 and avg_score >= self.threshold\n\n        return {\n            \"gate_pass\": gate_pass,\n            \"engine\": self.engine_version,\n            \"profile\": self.profile_name,\n            \"blocking_agents\": blocking_agents,\n            \"average_score\": avg_score,\n            \"threshold\": self.threshold,\n            \"files\": list(files.keys()),\n        }\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:24:36.280542+00:00"
+  }
+}

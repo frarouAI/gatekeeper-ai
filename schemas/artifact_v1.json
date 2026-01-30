@@ -1,0 +1,180 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://gatekeeper.ai/schemas/artifact/v1.json",
+  "title": "Gatekeeper Repair Artifact v1",
+  "description": "Immutable audit artifact for code repair operations",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "timestamp",
+    "filepath",
+    "mode",
+    "profile",
+    "summary",
+    "failures",
+    "iterations",
+    "diff",
+    "metadata"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": ["gatekeeper-artifact-v1.0"],
+      "description": "Schema version identifier"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp"
+    },
+    "filepath": {
+      "type": "string",
+      "description": "Path to file that was repaired"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["repair-live", "repair-dry-run"],
+      "description": "Repair execution mode"
+    },
+    "profile": {
+      "type": "string",
+      "enum": ["strict", "balanced", "permissive"],
+      "description": "Quality profile used"
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "initial_failure_count",
+        "final_failure_count",
+        "iterations_used",
+        "repair_confidence",
+        "improved",
+        "fully_repaired"
+      ],
+      "properties": {
+        "initial_failure_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "final_failure_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "iterations_used": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "repair_confidence": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "improved": {
+          "type": "boolean"
+        },
+        "fully_repaired": {
+          "type": "boolean"
+        }
+      }
+    },
+    "failures": {
+      "type": "object",
+      "required": ["initial", "final"],
+      "properties": {
+        "initial": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "final": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "iterations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["iteration", "failures_before", "repairs_proposed"],
+        "properties": {
+          "iteration": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "failures_before": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "repairs_proposed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "repairs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/repair_patch"
+            }
+          }
+        }
+      }
+    },
+    "diff": {
+      "type": "object",
+      "required": ["before", "after"],
+      "properties": {
+        "before": {
+          "type": "string"
+        },
+        "after": {
+          "type": "string"
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["gatekeeper_version", "created_at"],
+      "properties": {
+        "gatekeeper_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "repair_patch": {
+      "type": "object",
+      "required": ["line", "old", "new", "reason", "category", "blocking"],
+      "properties": {
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "old": {
+          "type": "string"
+        },
+        "new": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["spacing", "docstring", "naming", "typing", "logic", "security"]
+        },
+        "blocking": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

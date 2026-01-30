@@ -1,0 +1,48 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:28:22.486080+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/loop_controller.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 1,
+    "final_failure_count": 1,
+    "iterations_used": 1,
+    "repair_confidence": 0.0,
+    "improved": false,
+    "fully_repaired": false
+  },
+  "failures": {
+    "initial": [
+      "Line 13: Function missing docstring"
+    ],
+    "final": [
+      "Line 13: Function missing docstring"
+    ]
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 1,
+      "repairs_proposed": 1,
+      "repairs": [
+        {
+          "line": 13,
+          "old": "def run_loop(",
+          "new": "def run_loop(",
+          "reason": "Function already has docstring on line 20-22",
+          "category": "docstring",
+          "blocking": false
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "\"\"\"\nLoop Controller \u2014 Gatekeeper AI\nEnables controlled iterative repair with re-judging and artifact persistence.\n\"\"\"\n\nfrom typing import Dict\nfrom judge import judge_code\nfrom repair_agent import generate_repairs\nfrom repair_schema import apply_patches_preview, apply_patches_to_file\nfrom artifact_writer import write_repair_artifact\n\n\ndef run_loop(\n    filepath: str,\n    judge_result: Dict,\n    profile: str,\n    enable_repair: bool = False,\n    dry_run: bool = True,\n    max_iterations: int = 3\n) -> dict:\n    \"\"\"\n    Controlled repair loop with re-judging and artifact persistence.\n    \"\"\"\n\n    with open(filepath, \"r\") as f:\n        original_code = f.read()\n\n    current_code = original_code\n    history = []\n\n    prev_failure_count = len(judge_result.get(\"failures\", []))\n\n    for iteration in range(max_iterations):\n        # Re-judge current code\n        judge = judge_code(current_code, profile)\n        failures = judge.get(\"failures\", [])\n        failure_count = len(failures)\n\n        # Stop if clean\n        if failure_count == 0:\n            break\n\n        # Stop if no improvement\n        if iteration > 0 and failure_count >= prev_failure_count:\n            break\n\n        prev_failure_count = failure_count\n\n        # Propose repairs\n        repairs = generate_repairs(current_code, failures, profile)\n\n        if not repairs:\n            break\n\n        # Apply preview or real patch\n        if dry_run:\n            new_code = apply_patches_preview(current_code, repairs)\n        else:\n            # Apply patches to file\n            apply_result = apply_patches_to_file(\n                filepath=filepath,\n                patches=repairs,\n                dry_run=False,\n                create_backup=True\n            )\n            # Get the new code from the preview (what was applied)\n            new_code = apply_patches_preview(current_code, repairs)\n            # Actually write it\n            with open(filepath, \"w\") as f:\n                f.write(new_code)\n\n        history.append({\n            \"iteration\": iteration + 1,\n            \"failures_before\": failure_count,\n            \"repairs_proposed\": len(repairs),\n            \"repairs\": repairs\n        })\n\n        current_code = new_code\n\n    # Final judge\n    final_judge = judge_code(current_code, profile)\n\n    initial_failures = judge_result.get(\"failures\", [])\n    final_failures = final_judge.get(\"failures\", [])\n    \n    repair_confidence = (\n        1.0\n        if len(initial_failures) == 0\n        else max(0.0, 1 - (len(final_failures) / len(initial_failures)))\n    )\n\n    improved = len(final_failures) < len(initial_failures)\n    \n    # Write immutable artifact\n    mode = \"repair-live\" if enable_repair and not dry_run else \"repair-dry-run\"\n    \n    artifact_path = write_repair_artifact(\n        filepath=filepath,\n        profile=profile,\n        mode=mode,\n        initial_failures=initial_failures,\n        final_failures=final_failures,\n        iterations_used=len(history),\n        repair_confidence=repair_confidence,\n        history=history,\n        diff_before=original_code,\n        diff_after=current_code,\n        improved=improved\n    )\n\n    return {\n        \"mode\": mode,\n        \"filepath\": filepath,\n        \"profile\": profile,\n        \"iterations_used\": len(history),\n        \"initial_failures\": initial_failures,\n        \"final_failures\": final_failures,\n        \"repair_confidence\": round(repair_confidence, 3),\n        \"improved\": improved,\n        \"history\": history,\n        \"diff\": {\n            \"before\": original_code,\n            \"after\": current_code,\n        },\n        \"artifact_path\": str(artifact_path)\n    }\n",
+    "after": "\"\"\"\nLoop Controller \u2014 Gatekeeper AI\nEnables controlled iterative repair with re-judging and artifact persistence.\n\"\"\"\n\nfrom typing import Dict\nfrom judge import judge_code\nfrom repair_agent import generate_repairs\nfrom repair_schema import apply_patches_preview, apply_patches_to_file\nfrom artifact_writer import write_repair_artifact\n\n\ndef run_loop(\n    filepath: str,\n    judge_result: Dict,\n    profile: str,\n    enable_repair: bool = False,\n    dry_run: bool = True,\n    max_iterations: int = 3\n) -> dict:\n    \"\"\"\n    Controlled repair loop with re-judging and artifact persistence.\n    \"\"\"\n\n    with open(filepath, \"r\") as f:\n        original_code = f.read()\n\n    current_code = original_code\n    history = []\n\n    prev_failure_count = len(judge_result.get(\"failures\", []))\n\n    for iteration in range(max_iterations):\n        # Re-judge current code\n        judge = judge_code(current_code, profile)\n        failures = judge.get(\"failures\", [])\n        failure_count = len(failures)\n\n        # Stop if clean\n        if failure_count == 0:\n            break\n\n        # Stop if no improvement\n        if iteration > 0 and failure_count >= prev_failure_count:\n            break\n\n        prev_failure_count = failure_count\n\n        # Propose repairs\n        repairs = generate_repairs(current_code, failures, profile)\n\n        if not repairs:\n            break\n\n        # Apply preview or real patch\n        if dry_run:\n            new_code = apply_patches_preview(current_code, repairs)\n        else:\n            # Apply patches to file\n            apply_result = apply_patches_to_file(\n                filepath=filepath,\n                patches=repairs,\n                dry_run=False,\n                create_backup=True\n            )\n            # Get the new code from the preview (what was applied)\n            new_code = apply_patches_preview(current_code, repairs)\n            # Actually write it\n            with open(filepath, \"w\") as f:\n                f.write(new_code)\n\n        history.append({\n            \"iteration\": iteration + 1,\n            \"failures_before\": failure_count,\n            \"repairs_proposed\": len(repairs),\n            \"repairs\": repairs\n        })\n\n        current_code = new_code\n\n    # Final judge\n    final_judge = judge_code(current_code, profile)\n\n    initial_failures = judge_result.get(\"failures\", [])\n    final_failures = final_judge.get(\"failures\", [])\n    \n    repair_confidence = (\n        1.0\n        if len(initial_failures) == 0\n        else max(0.0, 1 - (len(final_failures) / len(initial_failures)))\n    )\n\n    improved = len(final_failures) < len(initial_failures)\n    \n    # Write immutable artifact\n    mode = \"repair-live\" if enable_repair and not dry_run else \"repair-dry-run\"\n    \n    artifact_path = write_repair_artifact(\n        filepath=filepath,\n        profile=profile,\n        mode=mode,\n        initial_failures=initial_failures,\n        final_failures=final_failures,\n        iterations_used=len(history),\n        repair_confidence=repair_confidence,\n        history=history,\n        diff_before=original_code,\n        diff_after=current_code,\n        improved=improved\n    )\n\n    return {\n        \"mode\": mode,\n        \"filepath\": filepath,\n        \"profile\": profile,\n        \"iterations_used\": len(history),\n        \"initial_failures\": initial_failures,\n        \"final_failures\": final_failures,\n        \"repair_confidence\": round(repair_confidence, 3),\n        \"improved\": improved,\n        \"history\": history,\n        \"diff\": {\n            \"before\": original_code,\n            \"after\": current_code,\n        },\n        \"artifact_path\": str(artifact_path)\n    }\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:28:22.486080+00:00"
+  }
+}

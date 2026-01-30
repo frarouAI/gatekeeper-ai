@@ -1,0 +1,46 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:27:52.701201+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/claude_cli.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 1,
+    "final_failure_count": 0,
+    "iterations_used": 1,
+    "repair_confidence": 1.0,
+    "improved": true,
+    "fully_repaired": true
+  },
+  "failures": {
+    "initial": [
+      "Line 24: Function missing docstring"
+    ],
+    "final": []
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 1,
+      "repairs_proposed": 1,
+      "repairs": [
+        {
+          "line": 24,
+          "old": "def main():",
+          "new": "def main():\n    \"\"\"Main entry point for the Claude Code Judge CLI.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "#!/usr/bin/env python3\n\"\"\"\nClaude Code Judge CLI\n\nUsage:\n    python3 claude_cli.py <file> [options]\n\nOptions:\n    --profile <strict|balanced|permissive>  Quality profile (default: strict)\n    --repair-dry-run                        Generate repair proposals (no file changes)\n    --repair-live                           Apply repairs iteratively (DANGEROUS, auditable)\n    --preview                               Show detailed preview of changes\n\"\"\"\n\nimport sys\nimport json\nfrom pathlib import Path\n\nfrom judge import judge_code\nfrom loop_controller import run_loop\nfrom repair_schema import display_preview\n\n\ndef main():\n    args = sys.argv[1:]\n    \n    if not args or '--help' in args:\n        print(__doc__)\n        sys.exit(0)\n    \n    filepath = args[0]\n    profile = \"strict\"\n    repair_dry_run = False\n    repair_live = False\n    show_preview = False\n    \n    # Parse flags\n    i = 1\n    while i < len(args):\n        arg = args[i]\n        if arg == \"--profile\" and i + 1 < len(args):\n            profile = args[i + 1]\n            i += 2\n        elif arg == \"--repair-dry-run\":\n            repair_dry_run = True\n            i += 1\n        elif arg == \"--repair-live\":\n            repair_live = True\n            i += 1\n        elif arg == \"--preview\":\n            show_preview = True\n            repair_dry_run = True\n            i += 1\n        else:\n            i += 1\n    \n    if not Path(filepath).exists():\n        print(f\"Error: File not found: {filepath}\")\n        sys.exit(1)\n    \n    with open(filepath, 'r') as f:\n        code = f.read()\n    \n    # Step 1: Judge the code\n    judge_result = judge_code(code, profile)\n    \n    # Step 2: Run repair if requested\n    if repair_dry_run or repair_live:\n        result = run_loop(\n            filepath=filepath,\n            judge_result=judge_result,\n            profile=profile,\n            enable_repair=True,\n            dry_run=not repair_live,\n            max_iterations=3\n        )\n        \n        if show_preview and result.get(\"diff\"):\n            print(\"\\n\" + \"=\"*60)\n            print(\"BEFORE:\")\n            print(\"=\"*60)\n            print(result[\"diff\"][\"before\"])\n            print(\"\\n\" + \"=\"*60)\n            print(\"AFTER:\")\n            print(\"=\"*60)\n            print(result[\"diff\"][\"after\"])\n        \n        print(\"\\n\" + \"=\"*60)\n        print(\"RESULT:\")\n        print(\"=\"*60)\n        print(json.dumps(result, indent=2))\n    else:\n        print(json.dumps(judge_result, indent=2))\n\n\nif __name__ == \"__main__\":\n    main()\n",
+    "after": "#!/usr/bin/env python3\n\"\"\"\nClaude Code Judge CLI\n\nUsage:\n    python3 claude_cli.py <file> [options]\n\nOptions:\n    --profile <strict|balanced|permissive>  Quality profile (default: strict)\n    --repair-dry-run                        Generate repair proposals (no file changes)\n    --repair-live                           Apply repairs iteratively (DANGEROUS, auditable)\n    --preview                               Show detailed preview of changes\n\"\"\"\n\nimport sys\nimport json\nfrom pathlib import Path\n\nfrom judge import judge_code\nfrom loop_controller import run_loop\nfrom repair_schema import display_preview\n\n\ndef main():\n    \"\"\"Main entry point for the Claude Code Judge CLI.\"\"\"\n    args = sys.argv[1:]\n    \n    if not args or '--help' in args:\n        print(__doc__)\n        sys.exit(0)\n    \n    filepath = args[0]\n    profile = \"strict\"\n    repair_dry_run = False\n    repair_live = False\n    show_preview = False\n    \n    # Parse flags\n    i = 1\n    while i < len(args):\n        arg = args[i]\n        if arg == \"--profile\" and i + 1 < len(args):\n            profile = args[i + 1]\n            i += 2\n        elif arg == \"--repair-dry-run\":\n            repair_dry_run = True\n            i += 1\n        elif arg == \"--repair-live\":\n            repair_live = True\n            i += 1\n        elif arg == \"--preview\":\n            show_preview = True\n            repair_dry_run = True\n            i += 1\n        else:\n            i += 1\n    \n    if not Path(filepath).exists():\n        print(f\"Error: File not found: {filepath}\")\n        sys.exit(1)\n    \n    with open(filepath, 'r') as f:\n        code = f.read()\n    \n    # Step 1: Judge the code\n    judge_result = judge_code(code, profile)\n    \n    # Step 2: Run repair if requested\n    if repair_dry_run or repair_live:\n        result = run_loop(\n            filepath=filepath,\n            judge_result=judge_result,\n            profile=profile,\n            enable_repair=True,\n            dry_run=not repair_live,\n            max_iterations=3\n        )\n        \n        if show_preview and result.get(\"diff\"):\n            print(\"\\n\" + \"=\"*60)\n            print(\"BEFORE:\")\n            print(\"=\"*60)\n            print(result[\"diff\"][\"before\"])\n            print(\"\\n\" + \"=\"*60)\n            print(\"AFTER:\")\n            print(\"=\"*60)\n            print(result[\"diff\"][\"after\"])\n        \n        print(\"\\n\" + \"=\"*60)\n        print(\"RESULT:\")\n        print(\"=\"*60)\n        print(json.dumps(result, indent=2))\n    else:\n        print(json.dumps(judge_result, indent=2))\n\n\nif __name__ == \"__main__\":\n    main()\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:27:52.701201+00:00"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:26:45.670471+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/.agent_backups/20260127_133401/html_report.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 2,
+    "final_failure_count": 0,
+    "iterations_used": 1,
+    "repair_confidence": 1.0,
+    "improved": true,
+    "fully_repaired": true
+  },
+  "failures": {
+    "initial": [
+      "Line 5: Function missing docstring",
+      "Line 133: Function missing docstring"
+    ],
+    "final": []
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 2,
+      "repairs_proposed": 2,
+      "repairs": [
+        {
+          "line": 5,
+          "old": "def generate_html_report(result: dict, file_path: str, model: str) -> str:",
+          "new": "def generate_html_report(result: dict, file_path: str, model: str) -> str:\n    \"\"\"Generate an HTML report from code analysis results.\n    \n    Args:\n        result: Dictionary containing analysis results with verdicts and scores\n        file_path: Path to the analyzed file\n        model: Name of the model used for analysis\n        \n    Returns:\n        HTML string containing the formatted report\n    \"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 133,
+          "old": "def write_html_report(result: dict, file_path: str, model: str, output_path: str):",
+          "new": "def write_html_report(result: dict, file_path: str, model: str, output_path: str):\n    \"\"\"Write HTML report to file.\n    \n    Args:\n        result: Dictionary containing analysis results\n        file_path: Path to the analyzed file\n        model: Name of the model used for analysis\n        output_path: Path where HTML report will be written\n    \"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "import datetime\nfrom pathlib import Path\n\n\ndef generate_html_report(result: dict, file_path: str, model: str) -> str:\n    now = datetime.datetime.now().strftime(\"%Y-%m-%d %H:%M:%S\")\n\n    verdict_color = \"#2ecc71\" if result[\"policy_pass\"] else \"#e74c3c\"\n    verdict_text = \"PASS\" if result[\"policy_pass\"] else \"FAIL\"\n\n    agent_blocks = \"\"\n\n    for v in result[\"verdicts\"]:\n        color = \"#2ecc71\" if v[\"pass\"] else \"#e74c3c\"\n\n        issues_html = \"\"\n        if v[\"issues\"]:\n            issues_html = \"<ul>\" + \"\".join(\n                f\"<li>{issue}</li>\" for issue in v[\"issues\"]\n            ) + \"</ul>\"\n        else:\n            issues_html = \"<p class='muted'>No issues</p>\"\n\n        agent_blocks += f\"\"\"\n        <div class=\"agent-card\">\n            <h3>{v['agent'].title()}</h3>\n            <p><strong>PASS:</strong> <span style=\"color:{color}\">{v['pass']}</span></p>\n            <p><strong>SCORE:</strong> {v['score']}</p>\n            <p><strong>SUMMARY:</strong> {v['summary']}</p>\n            <div class=\"issues\">\n                <strong>ISSUES:</strong>\n                {issues_html}\n            </div>\n        </div>\n        \"\"\"\n\n    blocking_html = \"\"\n    if result.get(\"blocking_failures\"):\n        blocking_html = \"<ul>\" + \"\".join(\n            f\"<li>{a}</li>\" for a in result[\"blocking_failures\"]\n        ) + \"</ul>\"\n    else:\n        blocking_html = \"<p class='muted'>None</p>\"\n\n    html = f\"\"\"\n<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"utf-8\">\n    <title>Claude Code Judge Report</title>\n    <style>\n        body {{\n            font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;\n            background: #f6f8fa;\n            padding: 30px;\n            color: #222;\n        }}\n        .container {{\n            max-width: 900px;\n            margin: auto;\n            background: #fff;\n            padding: 30px;\n            border-radius: 10px;\n            box-shadow: 0 4px 14px rgba(0,0,0,0.08);\n        }}\n        h1 {{\n            margin-top: 0;\n        }}\n        .verdict {{\n            font-size: 22px;\n            font-weight: bold;\n            color: {verdict_color};\n        }}\n        .meta {{\n            color: #666;\n            font-size: 14px;\n        }}\n        .score {{\n            font-size: 18px;\n            margin-top: 10px;\n        }}\n        .agent-card {{\n            border: 1px solid #e1e4e8;\n            border-radius: 8px;\n            padding: 15px 20px;\n            margin-top: 20px;\n        }}\n        .agent-card h3 {{\n            margin-top: 0;\n        }}\n        .issues {{\n            margin-top: 10px;\n        }}\n        .muted {{\n            color: #888;\n        }}\n        .footer {{\n            margin-top: 40px;\n            font-size: 13px;\n            color: #888;\n            text-align: center;\n        }}\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <h1>Claude Code Judge Report</h1>\n\n        <p class=\"meta\"><strong>File:</strong> {file_path}</p>\n        <p class=\"meta\"><strong>Model:</strong> {model}</p>\n        <p class=\"meta\"><strong>Generated:</strong> {now}</p>\n\n        <p class=\"verdict\">Policy Verdict: {verdict_text}</p>\n\n        <p class=\"score\"><strong>Average Score:</strong> {result['average_score']}</p>\n\n        <h2>Blocking Failures</h2>\n        {blocking_html}\n\n        <h2>Agent Verdicts</h2>\n        {agent_blocks}\n\n        <div class=\"footer\">\n            Generated by Claude Multi-Agent Code Judge\n        </div>\n    </div>\n</body>\n</html>\n\"\"\"\n    return html\n\n\ndef write_html_report(result: dict, file_path: str, model: str, output_path: str):\n    html = generate_html_report(result, file_path, model)\n    Path(output_path).write_text(html, encoding=\"utf-8\")\n",
+    "after": "import datetime\nfrom pathlib import Path\n\n\ndef generate_html_report(result: dict, file_path: str, model: str) -> str:\n    \"\"\"Generate an HTML report from code analysis results.\n    \n    Args:\n        result: Dictionary containing analysis results with verdicts and scores\n        file_path: Path to the analyzed file\n        model: Name of the model used for analysis\n        \n    Returns:\n        HTML string containing the formatted report\n    \"\"\"\n    now = datetime.datetime.now().strftime(\"%Y-%m-%d %H:%M:%S\")\n\n    verdict_color = \"#2ecc71\" if result[\"policy_pass\"] else \"#e74c3c\"\n    verdict_text = \"PASS\" if result[\"policy_pass\"] else \"FAIL\"\n\n    agent_blocks = \"\"\n\n    for v in result[\"verdicts\"]:\n        color = \"#2ecc71\" if v[\"pass\"] else \"#e74c3c\"\n\n        issues_html = \"\"\n        if v[\"issues\"]:\n            issues_html = \"<ul>\" + \"\".join(\n                f\"<li>{issue}</li>\" for issue in v[\"issues\"]\n            ) + \"</ul>\"\n        else:\n            issues_html = \"<p class='muted'>No issues</p>\"\n\n        agent_blocks += f\"\"\"\n        <div class=\"agent-card\">\n            <h3>{v['agent'].title()}</h3>\n            <p><strong>PASS:</strong> <span style=\"color:{color}\">{v['pass']}</span></p>\n            <p><strong>SCORE:</strong> {v['score']}</p>\n            <p><strong>SUMMARY:</strong> {v['summary']}</p>\n            <div class=\"issues\">\n                <strong>ISSUES:</strong>\n                {issues_html}\n            </div>\n        </div>\n        \"\"\"\n\n    blocking_html = \"\"\n    if result.get(\"blocking_failures\"):\n        blocking_html = \"<ul>\" + \"\".join(\n            f\"<li>{a}</li>\" for a in result[\"blocking_failures\"]\n        ) + \"</ul>\"\n    else:\n        blocking_html = \"<p class='muted'>None</p>\"\n\n    html = f\"\"\"\n<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"utf-8\">\n    <title>Claude Code Judge Report</title>\n    <style>\n        body {{\n            font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;\n            background: #f6f8fa;\n            padding: 30px;\n            color: #222;\n        }}\n        .container {{\n            max-width: 900px;\n            margin: auto;\n            background: #fff;\n            padding: 30px;\n            border-radius: 10px;\n            box-shadow: 0 4px 14px rgba(0,0,0,0.08);\n        }}\n        h1 {{\n            margin-top: 0;\n        }}\n        .verdict {{\n            font-size: 22px;\n            font-weight: bold;\n            color: {verdict_color};\n        }}\n        .meta {{\n            color: #666;\n            font-size: 14px;\n        }}\n        .score {{\n            font-size: 18px;\n            margin-top: 10px;\n        }}\n        .agent-card {{\n            border: 1px solid #e1e4e8;\n            border-radius: 8px;\n            padding: 15px 20px;\n            margin-top: 20px;\n        }}\n        .agent-card h3 {{\n            margin-top: 0;\n        }}\n        .issues {{\n            margin-top: 10px;\n        }}\n        .muted {{\n            color: #888;\n        }}\n        .footer {{\n            margin-top: 40px;\n            font-size: 13px;\n            color: #888;\n            text-align: center;\n        }}\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <h1>Claude Code Judge Report</h1>\n\n        <p class=\"meta\"><strong>File:</strong> {file_path}</p>\n        <p class=\"meta\"><strong>Model:</strong> {model}</p>\n        <p class=\"meta\"><strong>Generated:</strong> {now}</p>\n\n        <p class=\"verdict\">Policy Verdict: {verdict_text}</p>\n\n        <p class=\"score\"><strong>Average Score:</strong> {result['average_score']}</p>\n\n        <h2>Blocking Failures</h2>\n        {blocking_html}\n\n        <h2>Agent Verdicts</h2>\n        {agent_blocks}\n\n        <div class=\"footer\">\n            Generated by Claude Multi-Agent Code Judge\n        </div>\n    </div>\n</body>\n</html>\n\"\"\"\n    return html\n\n\ndef write_html_report(result: dict, file_path: str, model: str, output_path: str):\n    \"\"\"Write HTML report to file.\n    \n    Args:\n        result: Dictionary containing analysis results\n        file_path: Path to the analyzed file\n        model: Name of the model used for analysis\n        output_path: Path where HTML report will be written\n    \"\"\"\n    html = generate_html_report(result, file_path, model)\n    Path(output_path).write_text(html, encoding=\"utf-8\")\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:26:45.670471+00:00"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:24:56.177800+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/.agent_backups/20260127_133136/claude_backend.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 3,
+    "final_failure_count": 0,
+    "iterations_used": 1,
+    "repair_confidence": 1.0,
+    "improved": true,
+    "fully_repaired": true
+  },
+  "failures": {
+    "initial": [
+      "Line 14: Function missing docstring",
+      "Line 31: Function missing docstring",
+      "Line 42: Function missing docstring"
+    ],
+    "final": []
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 3,
+      "repairs_proposed": 3,
+      "repairs": [
+        {
+          "line": 14,
+          "old": "    def __init__(self, model=\"claude-sonnet-4-20250514\", max_tokens=1500):",
+          "new": "    def __init__(self, model=\"claude-sonnet-4-20250514\", max_tokens=1500):\n        \"\"\"Initialize Claude backend with model and token limits.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 31,
+          "old": "    def _estimate_cost(self, input_tokens: int, output_tokens: int) -> float:",
+          "new": "    def _estimate_cost(self, input_tokens: int, output_tokens: int) -> float:\n        \"\"\"Estimate cost based on token usage.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 42,
+          "old": "    def judge(self, system_prompt: str, user_prompt: str) -> str:",
+          "new": "    def judge(self, system_prompt: str, user_prompt: str) -> str:\n        \"\"\"Send prompts to Claude and return response.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "import os\nimport anthropic\n\n# ---- Pricing table (USD per 1M tokens) ----\nPRICING = {\n    \"claude-sonnet-4-20250514\": {\n        \"input\": 3.00,\n        \"output\": 15.00\n    }\n}\n\n\nclass ClaudeBackend:\n    def __init__(self, model=\"claude-sonnet-4-20250514\", max_tokens=1500):\n        api_key = os.environ.get(\"ANTHROPIC_API_KEY\")\n        if not api_key:\n            raise RuntimeError(\"ANTHROPIC_API_KEY not set\")\n\n        self.client = anthropic.Anthropic(api_key=api_key)\n        self.model = model\n        self.max_tokens = max_tokens\n\n        # ---- B10: Usage tracking ----\n        self.last_usage = {\n            \"input_tokens\": 0,\n            \"output_tokens\": 0,\n            \"total_tokens\": 0,\n            \"estimated_cost_usd\": 0.0\n        }\n\n    def _estimate_cost(self, input_tokens: int, output_tokens: int) -> float:\n        pricing = PRICING.get(self.model)\n        if not pricing:\n            return 0.0\n\n        cost = (\n            (input_tokens / 1_000_000) * pricing[\"input\"] +\n            (output_tokens / 1_000_000) * pricing[\"output\"]\n        )\n        return round(cost, 6)\n\n    def judge(self, system_prompt: str, user_prompt: str) -> str:\n        messages = [{\"role\": \"user\", \"content\": user_prompt}]\n\n        msg = self.client.messages.create(\n            model=self.model,\n            max_tokens=self.max_tokens,\n            temperature=0,  # deterministic\n            system=system_prompt,\n            messages=messages\n        )\n\n        # ---- Extract usage from API ----\n        usage = msg.usage\n        input_tokens = usage.input_tokens or 0\n        output_tokens = usage.output_tokens or 0\n        total_tokens = input_tokens + output_tokens\n\n        estimated_cost = self._estimate_cost(input_tokens, output_tokens)\n\n        self.last_usage = {\n            \"input_tokens\": input_tokens,\n            \"output_tokens\": output_tokens,\n            \"total_tokens\": total_tokens,\n            \"estimated_cost_usd\": estimated_cost\n        }\n\n        return msg.content[0].text.strip()\n\n\nif __name__ == \"__main__\":\n    backend = ClaudeBackend()\n    out = backend.judge(\"You are helpful.\", \"What is 2+2?\")\n    print(out)\n    print(\"USAGE:\", backend.last_usage)\n",
+    "after": "import os\nimport anthropic\n\n# ---- Pricing table (USD per 1M tokens) ----\nPRICING = {\n    \"claude-sonnet-4-20250514\": {\n        \"input\": 3.00,\n        \"output\": 15.00\n    }\n}\n\n\nclass ClaudeBackend:\n    def __init__(self, model=\"claude-sonnet-4-20250514\", max_tokens=1500):\n        \"\"\"Initialize Claude backend with model and token limits.\"\"\"\n        api_key = os.environ.get(\"ANTHROPIC_API_KEY\")\n        if not api_key:\n            raise RuntimeError(\"ANTHROPIC_API_KEY not set\")\n\n        self.client = anthropic.Anthropic(api_key=api_key)\n        self.model = model\n        self.max_tokens = max_tokens\n\n        # ---- B10: Usage tracking ----\n        self.last_usage = {\n            \"input_tokens\": 0,\n            \"output_tokens\": 0,\n            \"total_tokens\": 0,\n            \"estimated_cost_usd\": 0.0\n        }\n\n    def _estimate_cost(self, input_tokens: int, output_tokens: int) -> float:\n        \"\"\"Estimate cost based on token usage.\"\"\"\n        pricing = PRICING.get(self.model)\n        if not pricing:\n            return 0.0\n\n        cost = (\n            (input_tokens / 1_000_000) * pricing[\"input\"] +\n            (output_tokens / 1_000_000) * pricing[\"output\"]\n        )\n        return round(cost, 6)\n\n    def judge(self, system_prompt: str, user_prompt: str) -> str:\n        \"\"\"Send prompts to Claude and return response.\"\"\"\n        messages = [{\"role\": \"user\", \"content\": user_prompt}]\n\n        msg = self.client.messages.create(\n            model=self.model,\n            max_tokens=self.max_tokens,\n            temperature=0,  # deterministic\n            system=system_prompt,\n            messages=messages\n        )\n\n        # ---- Extract usage from API ----\n        usage = msg.usage\n        input_tokens = usage.input_tokens or 0\n        output_tokens = usage.output_tokens or 0\n        total_tokens = input_tokens + output_tokens\n\n        estimated_cost = self._estimate_cost(input_tokens, output_tokens)\n\n        self.last_usage = {\n            \"input_tokens\": input_tokens,\n            \"output_tokens\": output_tokens,\n            \"total_tokens\": total_tokens,\n            \"estimated_cost_usd\": estimated_cost\n        }\n\n        return msg.content[0].text.strip()\n\n\nif __name__ == \"__main__\":\n    backend = ClaudeBackend()\n    out = backend.judge(\"You are helpful.\", \"What is 2+2?\")\n    print(out)\n    print(\"USAGE:\", backend.last_usage)\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:24:56.177800+00:00"
+  }
+}

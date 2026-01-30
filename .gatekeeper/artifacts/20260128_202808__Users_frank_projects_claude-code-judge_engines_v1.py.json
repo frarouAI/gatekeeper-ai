@@ -1,0 +1,82 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:28:08.016800+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/engines/v1.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 5,
+    "final_failure_count": 0,
+    "iterations_used": 1,
+    "repair_confidence": 1.0,
+    "improved": true,
+    "fully_repaired": true
+  },
+  "failures": {
+    "initial": [
+      "Line 44: Function missing docstring",
+      "Line 52: Function missing docstring",
+      "Line 78: Function missing docstring",
+      "Line 95: Function missing docstring",
+      "Line 103: Function missing docstring"
+    ],
+    "final": []
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 5,
+      "repairs_proposed": 5,
+      "repairs": [
+        {
+          "line": 44,
+          "old": "    def __init__(self, model=\"claude-sonnet-4-20250514\", profile=\"startup\", max_tokens=1500):",
+          "new": "    def __init__(self, model=\"claude-sonnet-4-20250514\", profile=\"startup\", max_tokens=1500):\n        \"\"\"Initialize the engine with model, profile, and token settings.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": false
+        },
+        {
+          "line": 52,
+          "old": "    def _build_prompt(self, agent_name: str, code: str) -> str:",
+          "new": "    def _build_prompt(self, agent_name: str, code: str) -> str:\n        \"\"\"Build the prompt for a specific agent to review code.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": false
+        },
+        {
+          "line": 78,
+          "old": "    def _run_agent(self, agent_name: str, code: str) -> dict:",
+          "new": "    def _run_agent(self, agent_name: str, code: str) -> dict:\n        \"\"\"Run a single agent to review code and return verdict.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": false
+        },
+        {
+          "line": 95,
+          "old": "    def run_agents(self, code: str) -> list[dict]:",
+          "new": "    def run_agents(self, code: str) -> list[dict]:\n        \"\"\"Run all agents to review code and return list of verdicts.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": false
+        },
+        {
+          "line": 103,
+          "old": "    def judge(self, code: str):",
+          "new": "    def judge(self, code: str):\n        \"\"\"Compatibility shim for MultiAgentCodeJudge interface.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": false
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "import json\nfrom datetime import datetime, timezone\n\nfrom claude_backend import ClaudeBackend\n\nSCHEMA_VERSION = \"1.2\"\n\nAGENTS = {\n    \"correctness\": (\n        \"You are a strict code correctness reviewer. Focus on logic, edge cases, \"\n        \"type safety, and whether the code behaves correctly for all reasonable inputs.\"\n    ),\n    \"security\": (\n        \"You are a security reviewer. Look for vulnerabilities, unsafe patterns, \"\n        \"input validation issues, injection risks, and misuse of dangerous APIs.\"\n    ),\n    \"performance\": (\n        \"You are a performance reviewer. Analyze time and space complexity, \"\n        \"efficiency, scalability, and unnecessary overhead.\"\n    ),\n    \"style\": (\n        \"You are a Python style reviewer. Check readability, naming, docstrings, \"\n        \"formatting, PEP8 compliance, and general maintainability.\"\n    ),\n}\n\nAGENT_POLICY = {\n    \"correctness\": {\"weight\": 2.0, \"blocking\": True},\n    \"security\":    {\"weight\": 2.0, \"blocking\": True},\n    \"performance\": {\"weight\": 1.0, \"blocking\": False},\n    \"style\":       {\"weight\": 0.5, \"blocking\": False},\n}\n\nPROFILES = {\n    \"startup\": {\"threshold\": 75},\n    \"strict\":  {\"threshold\": 85},\n    \"relaxed\": {\"threshold\": 65},\n}\n\n\nclass EngineV1:\n    name = \"v1\"\n\n    def __init__(self, model=\"claude-sonnet-4-20250514\", profile=\"startup\", max_tokens=1500):\n        if profile not in PROFILES:\n            raise ValueError(f\"Unknown profile '{profile}'. Available: {list(PROFILES.keys())}\")\n\n        self.profile_name = profile\n        self.threshold = PROFILES[profile][\"threshold\"]\n        self.backend = ClaudeBackend(model=model, max_tokens=max_tokens)\n\n    def _build_prompt(self, agent_name: str, code: str) -> str:\n        return f\"\"\"\nReview the following Python code.\n\nReturn STRICT JSON in this exact schema:\n{{\n  \"agent\": \"{agent_name}\",\n  \"pass\": true | false,\n  \"score\": 0-100,\n  \"issues\": [\"string\", ...],\n  \"summary\": \"string\"\n}}\n\nRules:\n- No markdown\n- No commentary outside JSON\n- Score meaning:\n  90-100 = excellent\n  75-89  = good\n  60-74  = weak\n  <60    = poor\n\nCODE:\n{code}\n\"\"\"\n\n    def _run_agent(self, agent_name: str, code: str) -> dict:\n        system_prompt = AGENTS[agent_name]\n        user_prompt = self._build_prompt(agent_name, code)\n\n        raw = self.backend.judge(system_prompt, user_prompt)\n\n        try:\n            return json.loads(raw)\n        except Exception:\n            return {\n                \"agent\": agent_name,\n                \"pass\": False,\n                \"score\": 0,\n                \"issues\": [\"Model failed to return valid JSON.\"],\n                \"summary\": \"Model failed to return valid JSON.\"\n            }\n\n    def run_agents(self, code: str) -> list[dict]:\n        verdicts = []\n        for agent_name in AGENTS:\n            result = self._run_agent(agent_name, code)\n            verdicts.append(result)\n        return verdicts\n\n    # Compatibility shim expected by MultiAgentCodeJudge\n    def judge(self, code: str):\n        return self.run_agents(code)\n",
+    "after": "import json\nfrom datetime import datetime, timezone\n\nfrom claude_backend import ClaudeBackend\n\nSCHEMA_VERSION = \"1.2\"\n\nAGENTS = {\n    \"correctness\": (\n        \"You are a strict code correctness reviewer. Focus on logic, edge cases, \"\n        \"type safety, and whether the code behaves correctly for all reasonable inputs.\"\n    ),\n    \"security\": (\n        \"You are a security reviewer. Look for vulnerabilities, unsafe patterns, \"\n        \"input validation issues, injection risks, and misuse of dangerous APIs.\"\n    ),\n    \"performance\": (\n        \"You are a performance reviewer. Analyze time and space complexity, \"\n        \"efficiency, scalability, and unnecessary overhead.\"\n    ),\n    \"style\": (\n        \"You are a Python style reviewer. Check readability, naming, docstrings, \"\n        \"formatting, PEP8 compliance, and general maintainability.\"\n    ),\n}\n\nAGENT_POLICY = {\n    \"correctness\": {\"weight\": 2.0, \"blocking\": True},\n    \"security\":    {\"weight\": 2.0, \"blocking\": True},\n    \"performance\": {\"weight\": 1.0, \"blocking\": False},\n    \"style\":       {\"weight\": 0.5, \"blocking\": False},\n}\n\nPROFILES = {\n    \"startup\": {\"threshold\": 75},\n    \"strict\":  {\"threshold\": 85},\n    \"relaxed\": {\"threshold\": 65},\n}\n\n\nclass EngineV1:\n    name = \"v1\"\n\n    def __init__(self, model=\"claude-sonnet-4-20250514\", profile=\"startup\", max_tokens=1500):\n        \"\"\"Initialize the engine with model, profile, and token settings.\"\"\"\n        if profile not in PROFILES:\n            raise ValueError(f\"Unknown profile '{profile}'. Available: {list(PROFILES.keys())}\")\n\n        self.profile_name = profile\n        self.threshold = PROFILES[profile][\"threshold\"]\n        self.backend = ClaudeBackend(model=model, max_tokens=max_tokens)\n\n    def _build_prompt(self, agent_name: str, code: str) -> str:\n        \"\"\"Build the prompt for a specific agent to review code.\"\"\"\n        return f\"\"\"\nReview the following Python code.\n\nReturn STRICT JSON in this exact schema:\n{{\n  \"agent\": \"{agent_name}\",\n  \"pass\": true | false,\n  \"score\": 0-100,\n  \"issues\": [\"string\", ...],\n  \"summary\": \"string\"\n}}\n\nRules:\n- No markdown\n- No commentary outside JSON\n- Score meaning:\n  90-100 = excellent\n  75-89  = good\n  60-74  = weak\n  <60    = poor\n\nCODE:\n{code}\n\"\"\"\n\n    def _run_agent(self, agent_name: str, code: str) -> dict:\n        \"\"\"Run a single agent to review code and return verdict.\"\"\"\n        system_prompt = AGENTS[agent_name]\n        user_prompt = self._build_prompt(agent_name, code)\n\n        raw = self.backend.judge(system_prompt, user_prompt)\n\n        try:\n            return json.loads(raw)\n        except Exception:\n            return {\n                \"agent\": agent_name,\n                \"pass\": False,\n                \"score\": 0,\n                \"issues\": [\"Model failed to return valid JSON.\"],\n                \"summary\": \"Model failed to return valid JSON.\"\n            }\n\n    def run_agents(self, code: str) -> list[dict]:\n        \"\"\"Run all agents to review code and return list of verdicts.\"\"\"\n        verdicts = []\n        for agent_name in AGENTS:\n            result = self._run_agent(agent_name, code)\n            verdicts.append(result)\n        return verdicts\n\n    # Compatibility shim expected by MultiAgentCodeJudge\n    def judge(self, code: str):\n        \"\"\"Compatibility shim for MultiAgentCodeJudge interface.\"\"\"\n        return self.run_agents(code)\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:28:08.016800+00:00"
+  }
+}

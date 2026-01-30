@@ -1,0 +1,46 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:29:19.992629+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/submissions/bug.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 1,
+    "final_failure_count": 0,
+    "iterations_used": 1,
+    "repair_confidence": 1.0,
+    "improved": true,
+    "fully_repaired": true
+  },
+  "failures": {
+    "initial": [
+      "Line 2: Function missing docstring"
+    ],
+    "final": []
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 1,
+      "repairs_proposed": 1,
+      "repairs": [
+        {
+          "line": 2,
+          "old": "def safe_divide(a: float, b: float) -> float:",
+          "new": "def safe_divide(a: float, b: float) -> float:\n    \"\"\"Safely divide two numbers, raising ValueError if divisor is zero.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "\"\"\"Safe division.\"\"\"\ndef safe_divide(a: float, b: float) -> float:\n    if b == 0:\n        raise ValueError(\"Division by zero\")\n    return a / b\nprint(safe_divide(10, 2))\n",
+    "after": "\"\"\"Safe division.\"\"\"\ndef safe_divide(a: float, b: float) -> float:\n    \"\"\"Safely divide two numbers, raising ValueError if divisor is zero.\"\"\"\n    if b == 0:\n        raise ValueError(\"Division by zero\")\n    return a / b\nprint(safe_divide(10, 2))\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:29:19.992629+00:00"
+  }
+}

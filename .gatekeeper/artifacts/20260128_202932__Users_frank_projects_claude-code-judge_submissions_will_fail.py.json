@@ -1,0 +1,32 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:29:32.262255+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/submissions/will_fail.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 1,
+    "final_failure_count": 1,
+    "iterations_used": 0,
+    "repair_confidence": 0.0,
+    "improved": false,
+    "fully_repaired": false
+  },
+  "failures": {
+    "initial": [
+      "Line 1: Function missing docstring"
+    ],
+    "final": [
+      "Line 1: Function missing docstring"
+    ]
+  },
+  "iterations": [],
+  "diff": {
+    "before": "def process(x):\n    return undefined_var + x  # NameError\n\nprocess(5)\n",
+    "after": "def process(x):\n    return undefined_var + x  # NameError\n\nprocess(5)\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:29:32.262255+00:00"
+  }
+}

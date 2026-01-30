@@ -1,0 +1,58 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:28:52.647397+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/repair_agent.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 2,
+    "final_failure_count": 2,
+    "iterations_used": 1,
+    "repair_confidence": 0.0,
+    "improved": false,
+    "fully_repaired": false
+  },
+  "failures": {
+    "initial": [
+      "Line 126: Missing space after comma in function parameters",
+      "Line 56: Function missing docstring"
+    ],
+    "final": [
+      "Line 126: Missing space after comma in function parameters",
+      "Line 56: Function missing docstring"
+    ]
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 2,
+      "repairs_proposed": 2,
+      "repairs": [
+        {
+          "line": 126,
+          "old": "    print(json.dumps(patch, indent=2))",
+          "new": "    print(json.dumps(patch, indent=2))",
+          "reason": "No comma found in function parameters on line 126",
+          "category": "spacing",
+          "blocking": false
+        },
+        {
+          "line": 56,
+          "old": "def build_repair_prompt(code: str, failures: str, profile: str) -> str:",
+          "new": "def build_repair_prompt(code: str, failures: str, profile: str) -> str:\n    \"\"\"Build the repair agent prompt.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "\"\"\"\nRepair Agent \u2014 Claude-Powered Code Fixer\n\nThis module uses Claude to generate repair patches\nthat conform to repair_schema.py format.\n\"\"\"\n\nimport os\nimport json\nfrom anthropic import Anthropic\nfrom repair_schema import validate_patch\n\n\n# Initialize Claude client\nclient = Anthropic(api_key=os.environ.get(\"ANTHROPIC_API_KEY\"))\n\n\ndef build_repair_prompt(code: str, failures: str, profile: str) -> str:\n    \"\"\"Build the repair agent prompt.\"\"\"\n    return f\"\"\"You are a precise code repair agent. Your job is to fix ONLY the specific failures provided.\n\nCRITICAL RULES:\n1. Generate ONLY valid JSON - no markdown, no explanations, no preamble\n2. Fix ONLY the failures listed - do not refactor or improve other code\n3. Make MINIMAL edits - change only what's necessary\n4. Preserve all original formatting, indentation, and style except for the specific fix\n5. Each patch must have: line, old, new, reason, category, blocking\n\nOUTPUT FORMAT (JSON only):\n{{\n  \"patches\": [\n    {{\n      \"line\": <line_number>,\n      \"old\": \"<exact original line>\",\n      \"new\": \"<fixed line>\",\n      \"reason\": \"<why this fix is needed>\",\n      \"category\": \"<spacing|docstring|naming|style>\",\n      \"blocking\": <true|false>\n    }}\n  ]\n}}\n\nCODE TO FIX:\n```python\n{code}\n```\n\nFAILURES TO ADDRESS:\n{failures}\n\nPROFILE: {profile}\n\nGenerate repair patches as JSON only. No other text.\"\"\"\n\n\ndef generate_repairs(\n    code: str,\n    failures: list,\n    profile: str = \"strict\"\n) -> list[dict]:\n    \"\"\"\n    Use Claude to generate repair patches for code failures.\n    \n    Args:\n        code: Original Python code\n        failures: List of failure descriptions from judge\n        profile: Strictness level\n    \n    Returns:\n        List of RepairPatch dictionaries\n    \"\"\"\n    \n    if not failures:\n        return []\n    \n    # Format failures as numbered list\n    failures_text = \"\\n\".join(f\"{i+1}. {f}\" for i, f in enumerate(failures))\n    \n    # Build prompt\n    prompt = build_repair_prompt(code, failures_text, profile)\n    \n    # Call Claude\n    try:\n        message = client.messages.create(\n            model=\"claude-sonnet-4-20250514\",\n            max_tokens=4000,\n            messages=[{\n                \"role\": \"user\",\n                \"content\": prompt\n            }]\n        )\n        \n        # Extract response\n        response_text = message.content[0].text.strip()\n        \n        # Remove markdown code blocks if present\n        if response_text.startswith(\"```\"):\n            lines = response_text.split('\\n')\n            response_text = '\\n'.join(lines[1:-1])\n        \n        # Parse JSON\n        result = json.loads(response_text)\n        patches = result.get(\"patches\", [])\n        \n        # Validate all patches\n        valid_patches = []\n        for patch in patches:\n            if validate_patch(patch):\n                valid_patches.append(patch)\n            else:\n                print(f\"WARNING: Invalid patch skipped: {patch}\")\n        \n        return valid_patches\n        \n    except json.JSONDecodeError as e:\n        print(f\"ERROR: Claude returned invalid JSON: {e}\")\n        print(f\"Response was: {response_text[:500]}\")\n        return []\n    except Exception as e:\n        print(f\"ERROR: Failed to generate repairs: {e}\")\n        return []\n\n\n# Test function\nif __name__ == \"__main__\":\n    test_code = \"\"\"def add(x,y):\n    return x+y\n\nresult=add(1,2)\nprint(result)\"\"\"\n    \n    test_failures = [\n        \"Line 1: Missing space after comma in function parameters\",\n        \"Line 4: Missing spaces around assignment operator\"\n    ]\n    \n    print(\"Generating repairs...\")\n    patches = generate_repairs(test_code, test_failures, \"strict\")\n    \n    print(f\"\\nGenerated {len(patches)} patches:\")\n    for patch in patches:\n        print(json.dumps(patch, indent=2))\n",
+    "after": "\"\"\"\nRepair Agent \u2014 Claude-Powered Code Fixer\n\nThis module uses Claude to generate repair patches\nthat conform to repair_schema.py format.\n\"\"\"\n\nimport os\nimport json\nfrom anthropic import Anthropic\nfrom repair_schema import validate_patch\n\n\n# Initialize Claude client\nclient = Anthropic(api_key=os.environ.get(\"ANTHROPIC_API_KEY\"))\n\n\ndef build_repair_prompt(code: str, failures: str, profile: str) -> str:\n    \"\"\"Build the repair agent prompt.\"\"\"\n    return f\"\"\"You are a precise code repair agent. Your job is to fix ONLY the specific failures provided.\n\nCRITICAL RULES:\n1. Generate ONLY valid JSON - no markdown, no explanations, no preamble\n2. Fix ONLY the failures listed - do not refactor or improve other code\n3. Make MINIMAL edits - change only what's necessary\n4. Preserve all original formatting, indentation, and style except for the specific fix\n5. Each patch must have: line, old, new, reason, category, blocking\n\nOUTPUT FORMAT (JSON only):\n{{\n  \"patches\": [\n    {{\n      \"line\": <line_number>,\n      \"old\": \"<exact original line>\",\n      \"new\": \"<fixed line>\",\n      \"reason\": \"<why this fix is needed>\",\n      \"category\": \"<spacing|docstring|naming|style>\",\n      \"blocking\": <true|false>\n    }}\n  ]\n}}\n\nCODE TO FIX:\n```python\n{code}\n```\n\nFAILURES TO ADDRESS:\n{failures}\n\nPROFILE: {profile}\n\nGenerate repair patches as JSON only. No other text.\"\"\"\n\n\ndef generate_repairs(\n    code: str,\n    failures: list,\n    profile: str = \"strict\"\n) -> list[dict]:\n    \"\"\"\n    Use Claude to generate repair patches for code failures.\n    \n    Args:\n        code: Original Python code\n        failures: List of failure descriptions from judge\n        profile: Strictness level\n    \n    Returns:\n        List of RepairPatch dictionaries\n    \"\"\"\n    \n    if not failures:\n        return []\n    \n    # Format failures as numbered list\n    failures_text = \"\\n\".join(f\"{i+1}. {f}\" for i, f in enumerate(failures))\n    \n    # Build prompt\n    prompt = build_repair_prompt(code, failures_text, profile)\n    \n    # Call Claude\n    try:\n        message = client.messages.create(\n            model=\"claude-sonnet-4-20250514\",\n            max_tokens=4000,\n            messages=[{\n                \"role\": \"user\",\n                \"content\": prompt\n            }]\n        )\n        \n        # Extract response\n        response_text = message.content[0].text.strip()\n        \n        # Remove markdown code blocks if present\n        if response_text.startswith(\"```\"):\n            lines = response_text.split('\\n')\n            response_text = '\\n'.join(lines[1:-1])\n        \n        # Parse JSON\n        result = json.loads(response_text)\n        patches = result.get(\"patches\", [])\n        \n        # Validate all patches\n        valid_patches = []\n        for patch in patches:\n            if validate_patch(patch):\n                valid_patches.append(patch)\n            else:\n                print(f\"WARNING: Invalid patch skipped: {patch}\")\n        \n        return valid_patches\n        \n    except json.JSONDecodeError as e:\n        print(f\"ERROR: Claude returned invalid JSON: {e}\")\n        print(f\"Response was: {response_text[:500]}\")\n        return []\n    except Exception as e:\n        print(f\"ERROR: Failed to generate repairs: {e}\")\n        return []\n\n\n# Test function\nif __name__ == \"__main__\":\n    test_code = \"\"\"def add(x,y):\n    return x+y\n\nresult=add(1,2)\nprint(result)\"\"\"\n    \n    test_failures = [\n        \"Line 1: Missing space after comma in function parameters\",\n        \"Line 4: Missing spaces around assignment operator\"\n    ]\n    \n    print(\"Generating repairs...\")\n    patches = generate_repairs(test_code, test_failures, \"strict\")\n    \n    print(f\"\\nGenerated {len(patches)} patches:\")\n    for patch in patches:\n        print(json.dumps(patch, indent=2))\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:28:52.647397+00:00"
+  }
+}

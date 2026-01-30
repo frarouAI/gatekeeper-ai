@@ -1,2 +1,3 @@
 [console_scripts]
-gatekeeper = gatekeeper:main
+gatekeeper = gatekeeper_ai.cli:main
+gatekeeper-ci = gatekeeper_ai.ci_gate:main

@@ -1,0 +1,96 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:28:49.059255+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/multi_judge.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 5,
+    "final_failure_count": 5,
+    "iterations_used": 1,
+    "repair_confidence": 0.0,
+    "improved": false,
+    "fully_repaired": false
+  },
+  "failures": {
+    "initial": [
+      "Line 20: Function missing docstring",
+      "Line 54: Function missing docstring",
+      "Line 59: Function missing docstring",
+      "Line 110: Function missing docstring",
+      "Line 130: Function missing docstring"
+    ],
+    "final": [
+      "Line 20: Missing space after comma in function parameters",
+      "Line 55: Function missing docstring",
+      "Line 60: Function missing docstring",
+      "Line 111: Function missing docstring",
+      "Line 131: Function missing docstring"
+    ]
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 5,
+      "repairs_proposed": 6,
+      "repairs": [
+        {
+          "line": 20,
+          "old": "    def __init__(",
+          "new": "    def __init__(self,",
+          "reason": "Add docstring for __init__ method",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 21,
+          "old": "        self,",
+          "new": "        \"\"\"Initialize MultiAgentCodeJudge with configuration.\"\"\"\nself,",
+          "reason": "Add docstring for __init__ method",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 55,
+          "old": "    def _cache_key(self, code: str) -> str:",
+          "new": "    def _cache_key(self, code: str) -> str:\n        \"\"\"Generate cache key for code.\"\"\"",
+          "reason": "Add docstring for _cache_key method",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 60,
+          "old": "    def judge(self, code: str, file_path: str | None = None) -> dict:",
+          "new": "    def judge(self, code: str, file_path: str | None = None) -> dict:\n        \"\"\"Judge code quality and return verdict.\"\"\"",
+          "reason": "Add docstring for judge method",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 111,
+          "old": "    def judge_repo(self, files: Dict[str, str]) -> dict:",
+          "new": "    def judge_repo(self, files: Dict[str, str]) -> dict:\n        \"\"\"Judge multiple files in repository.\"\"\"",
+          "reason": "Add docstring for judge_repo method",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 131,
+          "old": "    def gate_repo(self, files: Dict[str, str]) -> dict:",
+          "new": "    def gate_repo(self, files: Dict[str, str]) -> dict:\n        \"\"\"Gate repository files for quality check.\"\"\"",
+          "reason": "Add docstring for gate_repo method",
+          "category": "docstring",
+          "blocking": true
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "import json\nimport hashlib\nfrom typing import Dict\nfrom datetime import datetime, timezone\n\nfrom engines.registry import get_engine\nfrom verdict_cache import VerdictCache\nfrom verdict_signer import VerdictSigner\n\nSCHEMA_VERSION = \"1.2\"\n\nPROFILES = {\n    \"startup\": {\"threshold\": 75},\n    \"strict\":  {\"threshold\": 85},\n    \"relaxed\": {\"threshold\": 65},\n}\n\n\nclass MultiAgentCodeJudge:\n    def __init__(\n        self,\n        model: str,\n        engine: str | None = None,\n        engine_version: str | None = None,\n        profile: str | None = None,\n        gate: bool = False,\n        cache: VerdictCache | None = None,\n        signer: VerdictSigner | None = None,\n        verify: bool = False,\n        enable_metering: bool = True,\n        enable_cache: bool = True,\n    ):\n        if profile not in PROFILES:\n            raise ValueError(f\"Unknown profile '{profile}'. Available: {list(PROFILES.keys())}\")\n\n        resolved_engine = engine_version or engine\n        if not resolved_engine:\n            raise ValueError(\"Either engine or engine_version must be provided\")\n\n        self.model = model\n        self.engine_version = resolved_engine\n        self.profile_name = profile\n        self.threshold = PROFILES[profile][\"threshold\"]\n        self.gate = gate\n\n        EngineClass = get_engine(resolved_engine)\n        self.engine = EngineClass(model=model, profile=profile)\n\n        self.cache = cache if cache is not None else (VerdictCache() if enable_cache else None)\n        self.signer = signer\n        self.verify_signatures = verify\n        self.enable_metering = enable_metering\n\n    def _cache_key(self, code: str) -> str:\n        h = hashlib.sha256()\n        h.update(code.encode(\"utf-8\"))\n        return h.hexdigest()\n\n    def judge(self, code: str, file_path: str | None = None) -> dict:\n        if self.cache:\n            key = self._cache_key(code)\n            cached = self.cache.get(key)\n            if cached:\n                return cached\n\n        verdicts = self.engine.judge(code)\n\n        total_weighted_score = 0.0\n        total_weight = 0.0\n        blocking_failures = []\n\n        for v in verdicts:\n            agent = v.get(\"agent\")\n            score = v.get(\"score\", 0)\n            passed = v.get(\"pass\", False)\n\n            from engines.v1 import AGENT_POLICY\n            policy = AGENT_POLICY.get(agent, {\"weight\": 1.0, \"blocking\": False})\n\n            weight = policy[\"weight\"]\n            total_weighted_score += score * weight\n            total_weight += weight\n\n            if policy[\"blocking\"] and not passed:\n                blocking_failures.append(agent)\n\n        final_score = round(total_weighted_score / total_weight, 2) if total_weight else 0.0\n        passed = final_score >= self.threshold and not blocking_failures\n\n        verdict = {\n            \"schema_version\": SCHEMA_VERSION,\n            \"engine\": self.engine_version,\n            \"profile\": self.profile_name,\n            \"score\": final_score,\n            \"pass\": passed,\n            \"blocking_failures\": blocking_failures,\n            \"timestamp\": datetime.now(timezone.utc).isoformat(),\n            \"verdicts\": verdicts,\n            \"file\": file_path,\n        }\n\n        if self.cache:\n            self.cache.set(self._cache_key(code), verdict)\n\n        if self.signer:\n            verdict[\"signature\"] = self.signer.sign(verdict)\n\n        return verdict\n\n    def judge_repo(self, files: Dict[str, str]) -> dict:\n        results = {}\n        failures = []\n\n        for path, code in files.items():\n            verdict = self.judge(code, file_path=path)\n            results[path] = verdict\n            if not verdict[\"pass\"]:\n                failures.append(path)\n\n        return {\n            \"schema_version\": SCHEMA_VERSION,\n            \"engine\": self.engine_version,\n            \"profile\": self.profile_name,\n            \"pass\": not failures,\n            \"failures\": failures,\n            \"results\": results,\n            \"timestamp\": datetime.now(timezone.utc).isoformat(),\n        }\n\n    def gate_repo(self, files: Dict[str, str]) -> dict:\n        return self.judge_repo(files)\n",
+    "after": "import json\nimport hashlib\nfrom typing import Dict\nfrom datetime import datetime, timezone\n\nfrom engines.registry import get_engine\nfrom verdict_cache import VerdictCache\nfrom verdict_signer import VerdictSigner\n\nSCHEMA_VERSION = \"1.2\"\n\nPROFILES = {\n    \"startup\": {\"threshold\": 75},\n    \"strict\":  {\"threshold\": 85},\n    \"relaxed\": {\"threshold\": 65},\n}\n\n\nclass MultiAgentCodeJudge:\n    def __init__(self,\n        \"\"\"Initialize MultiAgentCodeJudge with configuration.\"\"\"\nself,\n        model: str,\n        engine: str | None = None,\n        engine_version: str | None = None,\n        profile: str | None = None,\n        gate: bool = False,\n        cache: VerdictCache | None = None,\n        signer: VerdictSigner | None = None,\n        verify: bool = False,\n        enable_metering: bool = True,\n        enable_cache: bool = True,\n    ):\n        if profile not in PROFILES:\n            raise ValueError(f\"Unknown profile '{profile}'. Available: {list(PROFILES.keys())}\")\n\n        resolved_engine = engine_version or engine\n        if not resolved_engine:\n            raise ValueError(\"Either engine or engine_version must be provided\")\n\n        self.model = model\n        self.engine_version = resolved_engine\n        self.profile_name = profile\n        self.threshold = PROFILES[profile][\"threshold\"]\n        self.gate = gate\n\n        EngineClass = get_engine(resolved_engine)\n        self.engine = EngineClass(model=model, profile=profile)\n\n        self.cache = cache if cache is not None else (VerdictCache() if enable_cache else None)\n        self.signer = signer\n        self.verify_signatures = verify\n        self.enable_metering = enable_metering\n\n    def _cache_key(self, code: str) -> str:\n        h = hashlib.sha256()\n        h.update(code.encode(\"utf-8\"))\n        return h.hexdigest()\n\n    def judge(self, code: str, file_path: str | None = None) -> dict:\n        if self.cache:\n            key = self._cache_key(code)\n            cached = self.cache.get(key)\n            if cached:\n                return cached\n\n        verdicts = self.engine.judge(code)\n\n        total_weighted_score = 0.0\n        total_weight = 0.0\n        blocking_failures = []\n\n        for v in verdicts:\n            agent = v.get(\"agent\")\n            score = v.get(\"score\", 0)\n            passed = v.get(\"pass\", False)\n\n            from engines.v1 import AGENT_POLICY\n            policy = AGENT_POLICY.get(agent, {\"weight\": 1.0, \"blocking\": False})\n\n            weight = policy[\"weight\"]\n            total_weighted_score += score * weight\n            total_weight += weight\n\n            if policy[\"blocking\"] and not passed:\n                blocking_failures.append(agent)\n\n        final_score = round(total_weighted_score / total_weight, 2) if total_weight else 0.0\n        passed = final_score >= self.threshold and not blocking_failures\n\n        verdict = {\n            \"schema_version\": SCHEMA_VERSION,\n            \"engine\": self.engine_version,\n            \"profile\": self.profile_name,\n            \"score\": final_score,\n            \"pass\": passed,\n            \"blocking_failures\": blocking_failures,\n            \"timestamp\": datetime.now(timezone.utc).isoformat(),\n            \"verdicts\": verdicts,\n            \"file\": file_path,\n        }\n\n        if self.cache:\n            self.cache.set(self._cache_key(code), verdict)\n\n        if self.signer:\n            verdict[\"signature\"] = self.signer.sign(verdict)\n\n        return verdict\n\n    def judge_repo(self, files: Dict[str, str]) -> dict:\n        results = {}\n        failures = []\n\n        for path, code in files.items():\n            verdict = self.judge(code, file_path=path)\n            results[path] = verdict\n            if not verdict[\"pass\"]:\n                failures.append(path)\n\n        return {\n            \"schema_version\": SCHEMA_VERSION,\n            \"engine\": self.engine_version,\n            \"profile\": self.profile_name,\n            \"pass\": not failures,\n            \"failures\": failures,\n            \"results\": results,\n            \"timestamp\": datetime.now(timezone.utc).isoformat(),\n        }\n\n    def gate_repo(self, files: Dict[str, str]) -> dict:\n        return self.judge_repo(files)\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:28:49.059255+00:00"
+  }
+}

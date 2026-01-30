@@ -1,0 +1,55 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:24:59.564182+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/.agent_backups/20260127_133136/claude_cli.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 2,
+    "final_failure_count": 0,
+    "iterations_used": 1,
+    "repair_confidence": 1.0,
+    "improved": true,
+    "fully_repaired": true
+  },
+  "failures": {
+    "initial": [
+      "Line 12: Function missing docstring",
+      "Line 24: Function missing docstring"
+    ],
+    "final": []
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 2,
+      "repairs_proposed": 2,
+      "repairs": [
+        {
+          "line": 12,
+          "old": "def collect_repo_files(root: Path) -> dict:",
+          "new": "def collect_repo_files(root: Path) -> dict:\n    \"\"\"Collect all Python files from a repository directory.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 24,
+          "old": "def main():",
+          "new": "def main():\n    \"\"\"Main entry point for the Claude Gatekeeper AI.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "#!/usr/bin/env python3\n\nimport os\nimport sys\nimport json\nimport argparse\nfrom pathlib import Path\n\nfrom multi_judge import MultiAgentCodeJudge\n\n\ndef collect_repo_files(root: Path) -> dict:\n    files = {}\n    for path in root.rglob(\"*.py\"):\n        if \".git\" in path.parts or \"__pycache__\" in path.parts:\n            continue\n        try:\n            files[str(path)] = path.read_text()\n        except Exception:\n            pass\n    return files\n\n\ndef main():\n    parser = argparse.ArgumentParser(description=\"Claude Gatekeeper AI\")\n\n    parser.add_argument(\"file\", help=\"File or repo path\")\n    parser.add_argument(\"--json\", action=\"store_true\")\n    parser.add_argument(\"--ci\", action=\"store_true\")\n    parser.add_argument(\"--model\", default=\"claude-sonnet-4-20250514\")\n    parser.add_argument(\"--profile\", default=\"startup\")\n    parser.add_argument(\"--engine\", default=\"v1\")\n    parser.add_argument(\"--gate\", action=\"store_true\", help=\"Run in repo gate mode\")\n    parser.add_argument(\"--no-cache\", action=\"store_true\")\n    parser.add_argument(\"--no-meter\", action=\"store_true\")\n\n    args = parser.parse_args()\n\n    judge = MultiAgentCodeJudge(\n        model=args.model,\n        profile=args.profile,\n        engine_version=args.engine,\n        enable_cache=not args.no_cache,\n        enable_metering=not args.no_meter,\n    )\n\n    target = Path(args.file)\n\n    # -------- GATE MODE (THE PRODUCT) --------\n    if args.gate:\n        if target.is_file():\n            files = {str(target): target.read_text()}\n        else:\n            files = collect_repo_files(target)\n\n        gate = judge.gate_repo(files)\n        print(json.dumps(gate, indent=2))\n        sys.exit(0 if gate[\"gate_pass\"] else 1)\n\n    # -------- SINGLE FILE MODE --------\n    code = target.read_text()\n    result = judge.judge(code)\n\n    if args.json or args.ci:\n        print(json.dumps(result, indent=2))\n        sys.exit(0 if result[\"policy_pass\"] else 1)\n\n    print(\"\\n=== CLAUDE MULTI-AGENT CODE JUDGE ===\\n\")\n    print(\"FILE:\", args.file)\n    print(\"MODEL:\", args.model)\n    print(\"PROFILE:\", result[\"profile\"])\n    print(\"ENGINE:\", result[\"engine_version\"])\n    print()\n    print(\"OVERALL:\", \"PASS \u2705\" if result[\"overall_pass\"] else \"FAIL \u274c\")\n    print(\"POLICY:\", \"PASS \u2705\" if result[\"policy_pass\"] else \"FAIL \u274c\")\n    print(\"AVERAGE SCORE:\", result[\"average_score\"])\n    print(\"THRESHOLD:\", result[\"threshold\"])\n    print()\n\n    if result[\"blocking_failures\"]:\n        print(\"BLOCKING FAILURES:\", \", \".join(result[\"blocking_failures\"]))\n        print()\n\n    for v in result[\"verdicts\"]:\n        print(f\"[{v['agent'].upper()}]\")\n        print(\"PASS:\", v[\"pass\"])\n        print(\"SCORE:\", v[\"score\"])\n        print(\"SUMMARY:\", v[\"summary\"])\n        if v[\"issues\"]:\n            print(\"ISSUES:\")\n            for i in v[\"issues\"]:\n                print(\" -\", i)\n        print(\"-\" * 50)\n\n    sys.exit(0 if result[\"policy_pass\"] else 1)\n\n\nif __name__ == \"__main__\":\n    main()\n",
+    "after": "#!/usr/bin/env python3\n\nimport os\nimport sys\nimport json\nimport argparse\nfrom pathlib import Path\n\nfrom multi_judge import MultiAgentCodeJudge\n\n\ndef collect_repo_files(root: Path) -> dict:\n    \"\"\"Collect all Python files from a repository directory.\"\"\"\n    files = {}\n    for path in root.rglob(\"*.py\"):\n        if \".git\" in path.parts or \"__pycache__\" in path.parts:\n            continue\n        try:\n            files[str(path)] = path.read_text()\n        except Exception:\n            pass\n    return files\n\n\ndef main():\n    \"\"\"Main entry point for the Claude Gatekeeper AI.\"\"\"\n    parser = argparse.ArgumentParser(description=\"Claude Gatekeeper AI\")\n\n    parser.add_argument(\"file\", help=\"File or repo path\")\n    parser.add_argument(\"--json\", action=\"store_true\")\n    parser.add_argument(\"--ci\", action=\"store_true\")\n    parser.add_argument(\"--model\", default=\"claude-sonnet-4-20250514\")\n    parser.add_argument(\"--profile\", default=\"startup\")\n    parser.add_argument(\"--engine\", default=\"v1\")\n    parser.add_argument(\"--gate\", action=\"store_true\", help=\"Run in repo gate mode\")\n    parser.add_argument(\"--no-cache\", action=\"store_true\")\n    parser.add_argument(\"--no-meter\", action=\"store_true\")\n\n    args = parser.parse_args()\n\n    judge = MultiAgentCodeJudge(\n        model=args.model,\n        profile=args.profile,\n        engine_version=args.engine,\n        enable_cache=not args.no_cache,\n        enable_metering=not args.no_meter,\n    )\n\n    target = Path(args.file)\n\n    # -------- GATE MODE (THE PRODUCT) --------\n    if args.gate:\n        if target.is_file():\n            files = {str(target): target.read_text()}\n        else:\n            files = collect_repo_files(target)\n\n        gate = judge.gate_repo(files)\n        print(json.dumps(gate, indent=2))\n        sys.exit(0 if gate[\"gate_pass\"] else 1)\n\n    # -------- SINGLE FILE MODE --------\n    code = target.read_text()\n    result = judge.judge(code)\n\n    if args.json or args.ci:\n        print(json.dumps(result, indent=2))\n        sys.exit(0 if result[\"policy_pass\"] else 1)\n\n    print(\"\\n=== CLAUDE MULTI-AGENT CODE JUDGE ===\\n\")\n    print(\"FILE:\", args.file)\n    print(\"MODEL:\", args.model)\n    print(\"PROFILE:\", result[\"profile\"])\n    print(\"ENGINE:\", result[\"engine_version\"])\n    print()\n    print(\"OVERALL:\", \"PASS \u2705\" if result[\"overall_pass\"] else \"FAIL \u274c\")\n    print(\"POLICY:\", \"PASS \u2705\" if result[\"policy_pass\"] else \"FAIL \u274c\")\n    print(\"AVERAGE SCORE:\", result[\"average_score\"])\n    print(\"THRESHOLD:\", result[\"threshold\"])\n    print()\n\n    if result[\"blocking_failures\"]:\n        print(\"BLOCKING FAILURES:\", \", \".join(result[\"blocking_failures\"]))\n        print()\n\n    for v in result[\"verdicts\"]:\n        print(f\"[{v['agent'].upper()}]\")\n        print(\"PASS:\", v[\"pass\"])\n        print(\"SCORE:\", v[\"score\"])\n        print(\"SUMMARY:\", v[\"summary\"])\n        if v[\"issues\"]:\n            print(\"ISSUES:\")\n            for i in v[\"issues\"]:\n                print(\" -\", i)\n        print(\"-\" * 50)\n\n    sys.exit(0 if result[\"policy_pass\"] else 1)\n\n\nif __name__ == \"__main__\":\n    main()\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:24:59.564182+00:00"
+  }
+}

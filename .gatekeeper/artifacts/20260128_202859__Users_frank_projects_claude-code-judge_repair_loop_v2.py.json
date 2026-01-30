@@ -1,0 +1,55 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:28:59.569932+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/repair_loop_v2.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 2,
+    "final_failure_count": 0,
+    "iterations_used": 1,
+    "repair_confidence": 1.0,
+    "improved": true,
+    "fully_repaired": true
+  },
+  "failures": {
+    "initial": [
+      "Line 5: Function missing docstring",
+      "Line 12: Function missing docstring"
+    ],
+    "final": []
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 2,
+      "repairs_proposed": 2,
+      "repairs": [
+        {
+          "line": 5,
+          "old": "def parse_gate(json_str: str) -> bool:",
+          "new": "def parse_gate(json_str: str) -> bool:\n    \"\"\"Parse gate status from JSON string.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 12,
+          "old": "def repair(file_path: str):",
+          "new": "def repair(file_path: str):\n    \"\"\"Repair code file and check gate status.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "#!/usr/bin/env python3\nimport subprocess, json\nfrom pathlib import Path\n\ndef parse_gate(json_str: str) -> bool:\n    try:\n        data = json.loads(json_str)\n        return data.get('gate_pass', False)\n    except:\n        return '\"gate_pass\": true' in json_str\n\ndef repair(file_path: str):\n    path = Path(file_path)\n    code = path.read_text()\n    print(\"BROKEN:\", code)\n    # SIMULATED CLAUDE FIX (replace with API call)\n    fixed = code.replace('1/0', '10/2').replace('buggy', 'safe')\n    path.write_text(fixed)\n    print(\"SIMULATED FIX:\", fixed)\n    result = subprocess.run(['python3', 'claude_cli.py', str(path), '--gate'], \n                           capture_output=True, text=True)\n    print(\"AFTER:\", result.stdout)\n    return parse_gate(result.stdout)\n\nrepair('submissions/broken.py')\n",
+    "after": "#!/usr/bin/env python3\nimport subprocess, json\nfrom pathlib import Path\n\ndef parse_gate(json_str: str) -> bool:\n    \"\"\"Parse gate status from JSON string.\"\"\"\n    try:\n        data = json.loads(json_str)\n        return data.get('gate_pass', False)\n    except:\n        return '\"gate_pass\": true' in json_str\n\ndef repair(file_path: str):\n    \"\"\"Repair code file and check gate status.\"\"\"\n    path = Path(file_path)\n    code = path.read_text()\n    print(\"BROKEN:\", code)\n    # SIMULATED CLAUDE FIX (replace with API call)\n    fixed = code.replace('1/0', '10/2').replace('buggy', 'safe')\n    path.write_text(fixed)\n    print(\"SIMULATED FIX:\", fixed)\n    result = subprocess.run(['python3', 'claude_cli.py', str(path), '--gate'], \n                           capture_output=True, text=True)\n    print(\"AFTER:\", result.stdout)\n    return parse_gate(result.stdout)\n\nrepair('submissions/broken.py')\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:28:59.569932+00:00"
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:27:34.175676+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/batch_processor.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 2,
+    "final_failure_count": 2,
+    "iterations_used": 1,
+    "repair_confidence": 0.0,
+    "improved": false,
+    "fully_repaired": false
+  },
+  "failures": {
+    "initial": [
+      "Line 17: Function missing docstring",
+      "Line 65: Function missing docstring"
+    ],
+    "final": [
+      "Line 17: Function missing docstring",
+      "Line 65: Function missing docstring"
+    ]
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 2,
+      "repairs_proposed": 2,
+      "repairs": [
+        {
+          "line": 17,
+          "old": "def find_python_files(",
+          "new": "def find_python_files(",
+          "reason": "Function already has a docstring starting at line 22",
+          "category": "docstring",
+          "blocking": false
+        },
+        {
+          "line": 65,
+          "old": "def process_batch(",
+          "new": "def process_batch(",
+          "reason": "Function already has a docstring starting at line 73",
+          "category": "docstring",
+          "blocking": false
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "\"\"\"\nBatch Processor \u2014 Multi-file Code Repair\n\nHandles processing multiple Python files with glob pattern support.\n\"\"\"\n\nimport json\nfrom pathlib import Path\nfrom typing import List, Dict\nfrom judge import judge_code\nfrom loop_controller import run_loop\n\n\nMAX_FILES = 1000\n\n\ndef find_python_files(\n    patterns: List[str],\n    exclude_patterns: List[str] = None,\n    recursive: bool = True\n) -> List[Path]:\n    \"\"\"\n    Find all Python files matching patterns.\n    \n    Args:\n        patterns: List of glob patterns to include\n        exclude_patterns: List of glob patterns to exclude\n        recursive: Search subdirectories\n    \n    Returns:\n        List of Python file paths\n    \"\"\"\n    if exclude_patterns is None:\n        exclude_patterns = []\n    \n    all_files = set()\n    cwd = Path.cwd()\n    \n    # Find files matching include patterns\n    for pattern in patterns:\n        if recursive and '**' not in pattern:\n            pattern = f\"**/{pattern}\"\n        \n        matched = list(cwd.glob(pattern))\n        all_files.update(matched)\n    \n    # Filter out excluded patterns\n    excluded_files = set()\n    for pattern in exclude_patterns:\n        if recursive and '**' not in pattern:\n            pattern = f\"**/{pattern}\"\n        \n        matched = list(cwd.glob(pattern))\n        excluded_files.update(matched)\n    \n    # Keep only Python files that aren't excluded\n    result = []\n    for f in all_files:\n        if f.is_file() and f.suffix == '.py' and f not in excluded_files:\n            result.append(f)\n    \n    return sorted(result)\n\n\ndef process_batch(\n    paths: List[str],\n    profile: str = \"strict\",\n    enable_repair: bool = False,\n    apply_repairs: bool = False,\n    recursive: bool = True,\n    exclude_patterns: List[str] = None\n) -> Dict:\n    \"\"\"\n    Process multiple files.\n    \n    Args:\n        paths: List of file patterns to process\n        profile: Quality profile\n        enable_repair: Whether to generate repairs\n        apply_repairs: Whether to apply repairs (dry-run if False)\n        recursive: Search subdirectories\n        exclude_patterns: Patterns to exclude\n    \n    Returns:\n        Batch processing summary\n    \"\"\"\n    \n    # Find all matching files\n    all_files = find_python_files(paths, exclude_patterns, recursive)\n    \n    # Safety limit\n    if len(all_files) > MAX_FILES:\n        return {\n            \"total_files\": len(all_files),\n            \"ci_pass\": False,\n            \"error\": f\"Refusing to process {len(all_files)} files (limit {MAX_FILES})\"\n        }\n    \n    results = {\n        \"total_files\": len(all_files),\n        \"compliant_files\": 0,\n        \"non_compliant_files\": 0,\n        \"files_repaired\": 0,\n        \"total_failures\": 0,\n        \"total_repairs\": 0,\n        \"repair_confidence\": 1.0,\n        \"files\": [],\n    }\n    \n    confidence_scores = []\n    \n    for filepath in all_files:\n        try:\n            code = filepath.read_text()\n            \n            judge_result = judge_code(code, profile)\n            \n            file_entry = {\n                \"filepath\": str(filepath),\n                \"judge\": judge_result,\n            }\n            \n            if judge_result.get(\"compliant\", False):\n                results[\"compliant_files\"] += 1\n            else:\n                results[\"non_compliant_files\"] += 1\n                results[\"total_failures\"] += judge_result.get(\"failure_count\", 0)\n                \n                if enable_repair:\n                    loop_result = run_loop(\n                        filepath=str(filepath),\n                        judge_result=judge_result,\n                        profile=profile,\n                        enable_repair=True,\n                        dry_run=not apply_repairs,\n                        max_iterations=3,\n                    )\n                    \n                    file_entry[\"repair\"] = loop_result\n                    \n                    confidence_scores.append(loop_result.get(\"repair_confidence\", 1.0))\n                    results[\"total_repairs\"] += len(loop_result.get(\"history\", []))\n            \n            results[\"files\"].append(file_entry)\n            \n        except Exception as e:\n            results[\"files\"].append({\n                \"filepath\": str(filepath),\n                \"error\": str(e)\n            })\n    \n    # Aggregate confidence\n    if confidence_scores:\n        results[\"repair_confidence\"] = round(\n            sum(confidence_scores) / len(confidence_scores), 3\n        )\n    \n    # CI decision (STRICT)\n    results[\"ci_pass\"] = results[\"non_compliant_files\"] == 0\n    \n    return results\n",
+    "after": "\"\"\"\nBatch Processor \u2014 Multi-file Code Repair\n\nHandles processing multiple Python files with glob pattern support.\n\"\"\"\n\nimport json\nfrom pathlib import Path\nfrom typing import List, Dict\nfrom judge import judge_code\nfrom loop_controller import run_loop\n\n\nMAX_FILES = 1000\n\n\ndef find_python_files(\n    patterns: List[str],\n    exclude_patterns: List[str] = None,\n    recursive: bool = True\n) -> List[Path]:\n    \"\"\"\n    Find all Python files matching patterns.\n    \n    Args:\n        patterns: List of glob patterns to include\n        exclude_patterns: List of glob patterns to exclude\n        recursive: Search subdirectories\n    \n    Returns:\n        List of Python file paths\n    \"\"\"\n    if exclude_patterns is None:\n        exclude_patterns = []\n    \n    all_files = set()\n    cwd = Path.cwd()\n    \n    # Find files matching include patterns\n    for pattern in patterns:\n        if recursive and '**' not in pattern:\n            pattern = f\"**/{pattern}\"\n        \n        matched = list(cwd.glob(pattern))\n        all_files.update(matched)\n    \n    # Filter out excluded patterns\n    excluded_files = set()\n    for pattern in exclude_patterns:\n        if recursive and '**' not in pattern:\n            pattern = f\"**/{pattern}\"\n        \n        matched = list(cwd.glob(pattern))\n        excluded_files.update(matched)\n    \n    # Keep only Python files that aren't excluded\n    result = []\n    for f in all_files:\n        if f.is_file() and f.suffix == '.py' and f not in excluded_files:\n            result.append(f)\n    \n    return sorted(result)\n\n\ndef process_batch(\n    paths: List[str],\n    profile: str = \"strict\",\n    enable_repair: bool = False,\n    apply_repairs: bool = False,\n    recursive: bool = True,\n    exclude_patterns: List[str] = None\n) -> Dict:\n    \"\"\"\n    Process multiple files.\n    \n    Args:\n        paths: List of file patterns to process\n        profile: Quality profile\n        enable_repair: Whether to generate repairs\n        apply_repairs: Whether to apply repairs (dry-run if False)\n        recursive: Search subdirectories\n        exclude_patterns: Patterns to exclude\n    \n    Returns:\n        Batch processing summary\n    \"\"\"\n    \n    # Find all matching files\n    all_files = find_python_files(paths, exclude_patterns, recursive)\n    \n    # Safety limit\n    if len(all_files) > MAX_FILES:\n        return {\n            \"total_files\": len(all_files),\n            \"ci_pass\": False,\n            \"error\": f\"Refusing to process {len(all_files)} files (limit {MAX_FILES})\"\n        }\n    \n    results = {\n        \"total_files\": len(all_files),\n        \"compliant_files\": 0,\n        \"non_compliant_files\": 0,\n        \"files_repaired\": 0,\n        \"total_failures\": 0,\n        \"total_repairs\": 0,\n        \"repair_confidence\": 1.0,\n        \"files\": [],\n    }\n    \n    confidence_scores = []\n    \n    for filepath in all_files:\n        try:\n            code = filepath.read_text()\n            \n            judge_result = judge_code(code, profile)\n            \n            file_entry = {\n                \"filepath\": str(filepath),\n                \"judge\": judge_result,\n            }\n            \n            if judge_result.get(\"compliant\", False):\n                results[\"compliant_files\"] += 1\n            else:\n                results[\"non_compliant_files\"] += 1\n                results[\"total_failures\"] += judge_result.get(\"failure_count\", 0)\n                \n                if enable_repair:\n                    loop_result = run_loop(\n                        filepath=str(filepath),\n                        judge_result=judge_result,\n                        profile=profile,\n                        enable_repair=True,\n                        dry_run=not apply_repairs,\n                        max_iterations=3,\n                    )\n                    \n                    file_entry[\"repair\"] = loop_result\n                    \n                    confidence_scores.append(loop_result.get(\"repair_confidence\", 1.0))\n                    results[\"total_repairs\"] += len(loop_result.get(\"history\", []))\n            \n            results[\"files\"].append(file_entry)\n            \n        except Exception as e:\n            results[\"files\"].append({\n                \"filepath\": str(filepath),\n                \"error\": str(e)\n            })\n    \n    # Aggregate confidence\n    if confidence_scores:\n        results[\"repair_confidence\"] = round(\n            sum(confidence_scores) / len(confidence_scores), 3\n        )\n    \n    # CI decision (STRICT)\n    results[\"ci_pass\"] = results[\"non_compliant_files\"] == 0\n    \n    return results\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:27:34.175676+00:00"
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:29:17.586001+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/setup.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 5,
+    "final_failure_count": 0,
+    "iterations_used": 1,
+    "repair_confidence": 1.0,
+    "improved": true,
+    "fully_repaired": true
+  },
+  "failures": {
+    "initial": [
+      "Line 3: Missing spaces around assignment operator",
+      "Line 4: Missing spaces around assignment operator",
+      "Line 5: Missing spaces around assignment operator",
+      "Line 6: Missing spaces around assignment operator",
+      "Line 7: Missing spaces around assignment operator"
+    ],
+    "final": []
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 5,
+      "repairs_proposed": 5,
+      "repairs": [
+        {
+          "line": 3,
+          "old": "    name=\"gatekeeper-ai\",",
+          "new": "    name = \"gatekeeper-ai\",",
+          "reason": "Missing spaces around assignment operator",
+          "category": "spacing",
+          "blocking": true
+        },
+        {
+          "line": 4,
+          "old": "    version=\"1.0.1\",",
+          "new": "    version = \"1.0.1\",",
+          "reason": "Missing spaces around assignment operator",
+          "category": "spacing",
+          "blocking": true
+        },
+        {
+          "line": 5,
+          "old": "    py_modules=[\"gatekeeper\", \"claude_cli\"],",
+          "new": "    py_modules = [\"gatekeeper\", \"claude_cli\"],",
+          "reason": "Missing spaces around assignment operator",
+          "category": "spacing",
+          "blocking": true
+        },
+        {
+          "line": 6,
+          "old": "    entry_points={\"console_scripts\": [\"gatekeeper=gatekeeper:main\"]},",
+          "new": "    entry_points = {\"console_scripts\": [\"gatekeeper=gatekeeper:main\"]},",
+          "reason": "Missing spaces around assignment operator",
+          "category": "spacing",
+          "blocking": true
+        },
+        {
+          "line": 7,
+          "old": "    package_data={\"\":[\"multi_judge.py\", \"bot_server.py\", \"*.py\"]},",
+          "new": "    package_data = {\"\":[\"multi_judge.py\", \"bot_server.py\", \"*.py\"]},",
+          "reason": "Missing spaces around assignment operator",
+          "category": "spacing",
+          "blocking": true
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "from setuptools import setup\nsetup(\n    name=\"gatekeeper-ai\",\n    version=\"1.0.1\",\n    py_modules=[\"gatekeeper\", \"claude_cli\"],\n    entry_points={\"console_scripts\": [\"gatekeeper=gatekeeper:main\"]},\n    package_data={\"\": [\"multi_judge.py\", \"bot_server.py\", \"*.py\"]},\n)\n",
+    "after": "from setuptools import setup\nsetup(\n    name = \"gatekeeper-ai\",\n    version = \"1.0.1\",\n    py_modules = [\"gatekeeper\", \"claude_cli\"],\n    entry_points = {\"console_scripts\": [\"gatekeeper=gatekeeper:main\"]},\n    package_data={\"\": [\"multi_judge.py\", \"bot_server.py\", \"*.py\"]},\n)\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:29:17.586001+00:00"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:27:45.974566+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/ci_gate.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 1,
+    "final_failure_count": 0,
+    "iterations_used": 1,
+    "repair_confidence": 1.0,
+    "improved": true,
+    "fully_repaired": true
+  },
+  "failures": {
+    "initial": [
+      "Line 15: Function missing docstring"
+    ],
+    "final": []
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 1,
+      "repairs_proposed": 1,
+      "repairs": [
+        {
+          "line": 15,
+          "old": "def main():",
+          "new": "def main():\n    \"\"\"Main entry point for Gatekeeper CI validation.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "\"\"\"\nGatekeeper CI Entry Point\n\nUsed by GitHub Actions to gate pull requests.\nRespects .gatekeeper.yml configuration.\n\"\"\"\n\nimport sys\nimport json\nfrom pathlib import Path\nfrom gatekeeper_config import GatekeeperConfig\nfrom batch_processor import process_batch\n\n\ndef main():\n    # Load configuration\n    config = GatekeeperConfig.load()\n    \n    # Validate configuration\n    errors = config.validate()\n    if errors:\n        print(\"\u274c Configuration errors:\")\n        for error in errors:\n            print(f\"  - {error}\")\n        sys.exit(1)\n    \n    print(f\"\u2705 Loaded Gatekeeper config\")\n    print(f\"   Profile: {config.profile}\")\n    print(f\"   CI enabled: {config.ci.enabled}\")\n    print(f\"   Repair mode: {config.repair.mode}\")\n    print(f\"   Include patterns: {config.paths.include}\")\n    print(f\"   Exclude patterns: {config.paths.exclude}\")\n    \n    if not config.ci.enabled:\n        print(\"\u26a0\ufe0f  CI is disabled in config - skipping\")\n        sys.exit(0)\n    \n    # Process all files matching include/exclude patterns\n    result = process_batch(\n        paths=config.paths.include,\n        profile=config.profile,\n        enable_repair=config.repair.enabled,\n        apply_repairs=False,  # CI NEVER mutates code\n        recursive=True,\n        exclude_patterns=config.paths.exclude\n    )\n    \n    # Print results\n    print(\"\\n\" + \"=\"*70)\n    print(\"GATEKEEPER CI RESULTS\")\n    print(\"=\"*70)\n    print(json.dumps(result, indent=2))\n    \n    # Check CI pass conditions\n    ci_pass = True\n    \n    if config.ci.fail_on_non_compliant:\n        if not result.get(\"ci_pass\", False):\n            print(f\"\\n\u274c CI Gate FAILED: {result['non_compliant_files']} non-compliant files detected\")\n            ci_pass = False\n    \n    if config.ci.fail_on_confidence_below > 0:\n        repair_confidence = result.get(\"repair_confidence\", 1.0)\n        if repair_confidence < config.ci.fail_on_confidence_below:\n            print(f\"\\n\u274c CI Gate FAILED: Repair confidence {repair_confidence} below threshold {config.ci.fail_on_confidence_below}\")\n            ci_pass = False\n    \n    if ci_pass:\n        print(\"\\n\u2705 Gatekeeper CI PASSED\")\n        sys.exit(0)\n    else:\n        sys.exit(1)\n\n\nif __name__ == \"__main__\":\n    main()\n",
+    "after": "\"\"\"\nGatekeeper CI Entry Point\n\nUsed by GitHub Actions to gate pull requests.\nRespects .gatekeeper.yml configuration.\n\"\"\"\n\nimport sys\nimport json\nfrom pathlib import Path\nfrom gatekeeper_config import GatekeeperConfig\nfrom batch_processor import process_batch\n\n\ndef main():\n    \"\"\"Main entry point for Gatekeeper CI validation.\"\"\"\n    # Load configuration\n    config = GatekeeperConfig.load()\n    \n    # Validate configuration\n    errors = config.validate()\n    if errors:\n        print(\"\u274c Configuration errors:\")\n        for error in errors:\n            print(f\"  - {error}\")\n        sys.exit(1)\n    \n    print(f\"\u2705 Loaded Gatekeeper config\")\n    print(f\"   Profile: {config.profile}\")\n    print(f\"   CI enabled: {config.ci.enabled}\")\n    print(f\"   Repair mode: {config.repair.mode}\")\n    print(f\"   Include patterns: {config.paths.include}\")\n    print(f\"   Exclude patterns: {config.paths.exclude}\")\n    \n    if not config.ci.enabled:\n        print(\"\u26a0\ufe0f  CI is disabled in config - skipping\")\n        sys.exit(0)\n    \n    # Process all files matching include/exclude patterns\n    result = process_batch(\n        paths=config.paths.include,\n        profile=config.profile,\n        enable_repair=config.repair.enabled,\n        apply_repairs=False,  # CI NEVER mutates code\n        recursive=True,\n        exclude_patterns=config.paths.exclude\n    )\n    \n    # Print results\n    print(\"\\n\" + \"=\"*70)\n    print(\"GATEKEEPER CI RESULTS\")\n    print(\"=\"*70)\n    print(json.dumps(result, indent=2))\n    \n    # Check CI pass conditions\n    ci_pass = True\n    \n    if config.ci.fail_on_non_compliant:\n        if not result.get(\"ci_pass\", False):\n            print(f\"\\n\u274c CI Gate FAILED: {result['non_compliant_files']} non-compliant files detected\")\n            ci_pass = False\n    \n    if config.ci.fail_on_confidence_below > 0:\n        repair_confidence = result.get(\"repair_confidence\", 1.0)\n        if repair_confidence < config.ci.fail_on_confidence_below:\n            print(f\"\\n\u274c CI Gate FAILED: Repair confidence {repair_confidence} below threshold {config.ci.fail_on_confidence_below}\")\n            ci_pass = False\n    \n    if ci_pass:\n        print(\"\\n\u2705 Gatekeeper CI PASSED\")\n        sys.exit(0)\n    else:\n        sys.exit(1)\n\n\nif __name__ == \"__main__\":\n    main()\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:27:45.974566+00:00"
+  }
+}

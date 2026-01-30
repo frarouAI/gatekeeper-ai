@@ -1,0 +1,46 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:26:32.039488+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/.agent_backups/20260127_133401/engines/registry.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 1,
+    "final_failure_count": 0,
+    "iterations_used": 1,
+    "repair_confidence": 1.0,
+    "improved": true,
+    "fully_repaired": true
+  },
+  "failures": {
+    "initial": [
+      "Line 10: Function missing docstring"
+    ],
+    "final": []
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 1,
+      "repairs_proposed": 1,
+      "repairs": [
+        {
+          "line": 10,
+          "old": "def get_engine(engine_name: str):",
+          "new": "def get_engine(engine_name: str):\n    \"\"\"Get engine class by name from registry.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "from engines.v1 import EngineV1\nfrom engines.v2 import EngineV2\n\nENGINE_REGISTRY = {\n    \"v1\": EngineV1,\n    \"v2\": EngineV2,\n}\n\n\ndef get_engine(engine_name: str):\n    if engine_name not in ENGINE_REGISTRY:\n        raise ValueError(\n            f\"Unknown engine '{engine_name}'. \"\n            f\"Available engines: {list(ENGINE_REGISTRY.keys())}\"\n        )\n\n    return ENGINE_REGISTRY[engine_name]\n",
+    "after": "from engines.v1 import EngineV1\nfrom engines.v2 import EngineV2\n\nENGINE_REGISTRY = {\n    \"v1\": EngineV1,\n    \"v2\": EngineV2,\n}\n\n\ndef get_engine(engine_name: str):\n    \"\"\"Get engine class by name from registry.\"\"\"\n    if engine_name not in ENGINE_REGISTRY:\n        raise ValueError(\n            f\"Unknown engine '{engine_name}'. \"\n            f\"Available engines: {list(ENGINE_REGISTRY.keys())}\"\n        )\n\n    return ENGINE_REGISTRY[engine_name]\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:26:32.039488+00:00"
+  }
+}

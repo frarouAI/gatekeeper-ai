@@ -1,0 +1,46 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:29:10.213196+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/repo_gate.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 1,
+    "final_failure_count": 0,
+    "iterations_used": 1,
+    "repair_confidence": 1.0,
+    "improved": true,
+    "fully_repaired": true
+  },
+  "failures": {
+    "initial": [
+      "Line 6: Function missing docstring"
+    ],
+    "final": []
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 1,
+      "repairs_proposed": 1,
+      "repairs": [
+        {
+          "line": 6,
+          "old": "def collect_py_files(root: Path) -> dict[str, str]:",
+          "new": "def collect_py_files(root: Path) -> dict[str, str]:\n    \"\"\"Collect Python files from root directory and return as dict mapping paths to contents.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "#!/usr/bin/env python3\n\"\"\"Repo-wide gate.\"\"\"\nfrom pathlib import Path\nfrom multijudge import MultiAgentCodeJudge\n\ndef collect_py_files(root: Path) -> dict[str, str]:\n    files = {}\n    for path in root.rglob('*.py'):\n        if '.git' in path.parts or '__pycache__' in path.parts:\n            continue\n        try:\n            files[str(path)] = path.read_text()\n        except Exception:\n            pass\n    return files\n\njudge = MultiAgentCodeJudge(profile='strict')\nfiles = collect_py_files(Path('.'))\ngate = judge.gate_repo(files)\nprint(gate)\n",
+    "after": "#!/usr/bin/env python3\n\"\"\"Repo-wide gate.\"\"\"\nfrom pathlib import Path\nfrom multijudge import MultiAgentCodeJudge\n\ndef collect_py_files(root: Path) -> dict[str, str]:\n    \"\"\"Collect Python files from root directory and return as dict mapping paths to contents.\"\"\"\n    files = {}\n    for path in root.rglob('*.py'):\n        if '.git' in path.parts or '__pycache__' in path.parts:\n            continue\n        try:\n            files[str(path)] = path.read_text()\n        except Exception:\n            pass\n    return files\n\njudge = MultiAgentCodeJudge(profile='strict')\nfiles = collect_py_files(Path('.'))\ngate = judge.gate_repo(files)\nprint(gate)\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:29:10.213196+00:00"
+  }
+}

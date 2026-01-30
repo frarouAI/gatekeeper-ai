@@ -1,0 +1,55 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:24:27.878823+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/.agent_backups/20260127_133123/whatsapp-bot/agents.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 2,
+    "final_failure_count": 0,
+    "iterations_used": 1,
+    "repair_confidence": 1.0,
+    "improved": true,
+    "fully_repaired": true
+  },
+  "failures": {
+    "initial": [
+      "Line 1: Function missing docstring",
+      "Line 24: Function missing docstring"
+    ],
+    "final": []
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 2,
+      "repairs_proposed": 2,
+      "repairs": [
+        {
+          "line": 1,
+          "old": "def get_security_prompt(context: str) -> str:",
+          "new": "def get_security_prompt(context: str) -> str:\n    \"\"\"Generate security review prompt based on context.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": false
+        },
+        {
+          "line": 24,
+          "old": "def get_correctness_prompt(context: str) -> str:",
+          "new": "def get_correctness_prompt(context: str) -> str:\n    \"\"\"Generate correctness review prompt based on context.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": false
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "def get_security_prompt(context: str) -> str:\n    base_prompt = (\n        \"You are a security reviewer. Look for vulnerabilities, unsafe patterns, \"\n        \"input validation issues, injection risks, and misuse of dangerous APIs.\"\n    )\n\n    if context == \"judge_internal\":\n        return base_prompt + \"\"\"\n\nCONTEXT: judge_internal \u2014 This is judge infrastructure code.\n\nFor judge_internal context, ALLOW these patterns when used for legitimate judge operations:\n- exec()\n- ast.parse()\n- compile()\n- open()\n- __import__ / importlib\n\nStill flag real vulnerabilities regardless of context.\n\"\"\"\n    return base_prompt\n\n\ndef get_correctness_prompt(context: str) -> str:\n    base_prompt = (\n        \"You are a strict code correctness reviewer. Focus on logic, edge cases, \"\n        \"type safety, and whether the code behaves correctly for all reasonable inputs.\"\n    )\n\n    if context == \"judge_internal\":\n        return base_prompt + \"\"\"\n\nCONTEXT: judge_internal \u2014 This is judge infrastructure code.\n\nGive positive correctness signals for:\n- defensive coding\n- explicit error handling\n- deterministic logic\n- config separation\n- boundary checks\n\nDo NOT fail correctness for:\n- missing docstrings\n- missing type hints\n- dynamic orchestration logic\n- glue code patterns\n\nFocus on functional correctness over style polish.\n\"\"\"\n    return base_prompt\n\n\nAGENTS = {\n    \"correctness\": {\n        \"prompt_fn\": get_correctness_prompt\n    },\n    \"security\": {\n        \"prompt_fn\": get_security_prompt\n    },\n    \"performance\": {\n        \"system_prompt\": (\n            \"You are a performance reviewer. Analyze time and space complexity, \"\n            \"efficiency, scalability, and unnecessary overhead.\"\n        )\n    },\n    \"style\": {\n        \"system_prompt\": (\n            \"You are a Python style reviewer. Check readability, naming, docstrings, \"\n            \"formatting, PEP8 compliance, and general maintainability.\"\n        )\n    },\n}\n\n\nAGENT_POLICY = {\n    \"correctness\": {\"weight\": 2.0, \"blocking\": True},\n    \"security\":    {\"weight\": 2.0, \"blocking\": True},\n    \"performance\": {\"weight\": 1.0, \"blocking\": False},\n    \"style\":       {\"weight\": 0.5, \"blocking\": False},\n}\n\n\nPROFILES = {\n    \"startup\": {\"threshold\": 75},\n    \"strict\":  {\"threshold\": 85},\n    \"relaxed\": {\"threshold\": 65},\n}\n",
+    "after": "def get_security_prompt(context: str) -> str:\n    \"\"\"Generate security review prompt based on context.\"\"\"\n    base_prompt = (\n        \"You are a security reviewer. Look for vulnerabilities, unsafe patterns, \"\n        \"input validation issues, injection risks, and misuse of dangerous APIs.\"\n    )\n\n    if context == \"judge_internal\":\n        return base_prompt + \"\"\"\n\nCONTEXT: judge_internal \u2014 This is judge infrastructure code.\n\nFor judge_internal context, ALLOW these patterns when used for legitimate judge operations:\n- exec()\n- ast.parse()\n- compile()\n- open()\n- __import__ / importlib\n\nStill flag real vulnerabilities regardless of context.\n\"\"\"\n    return base_prompt\n\n\ndef get_correctness_prompt(context: str) -> str:\n    \"\"\"Generate correctness review prompt based on context.\"\"\"\n    base_prompt = (\n        \"You are a strict code correctness reviewer. Focus on logic, edge cases, \"\n        \"type safety, and whether the code behaves correctly for all reasonable inputs.\"\n    )\n\n    if context == \"judge_internal\":\n        return base_prompt + \"\"\"\n\nCONTEXT: judge_internal \u2014 This is judge infrastructure code.\n\nGive positive correctness signals for:\n- defensive coding\n- explicit error handling\n- deterministic logic\n- config separation\n- boundary checks\n\nDo NOT fail correctness for:\n- missing docstrings\n- missing type hints\n- dynamic orchestration logic\n- glue code patterns\n\nFocus on functional correctness over style polish.\n\"\"\"\n    return base_prompt\n\n\nAGENTS = {\n    \"correctness\": {\n        \"prompt_fn\": get_correctness_prompt\n    },\n    \"security\": {\n        \"prompt_fn\": get_security_prompt\n    },\n    \"performance\": {\n        \"system_prompt\": (\n            \"You are a performance reviewer. Analyze time and space complexity, \"\n            \"efficiency, scalability, and unnecessary overhead.\"\n        )\n    },\n    \"style\": {\n        \"system_prompt\": (\n            \"You are a Python style reviewer. Check readability, naming, docstrings, \"\n            \"formatting, PEP8 compliance, and general maintainability.\"\n        )\n    },\n}\n\n\nAGENT_POLICY = {\n    \"correctness\": {\"weight\": 2.0, \"blocking\": True},\n    \"security\":    {\"weight\": 2.0, \"blocking\": True},\n    \"performance\": {\"weight\": 1.0, \"blocking\": False},\n    \"style\":       {\"weight\": 0.5, \"blocking\": False},\n}\n\n\nPROFILES = {\n    \"startup\": {\"threshold\": 75},\n    \"strict\":  {\"threshold\": 85},\n    \"relaxed\": {\"threshold\": 65},\n}\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:24:27.878823+00:00"
+  }
+}

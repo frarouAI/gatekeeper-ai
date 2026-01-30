@@ -1,0 +1,55 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:23:38.084322+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/.agent_backups/20260127_133123/clawdbot.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 2,
+    "final_failure_count": 0,
+    "iterations_used": 1,
+    "repair_confidence": 1.0,
+    "improved": true,
+    "fully_repaired": true
+  },
+  "failures": {
+    "initial": [
+      "Line 20: Function missing docstring",
+      "Line 40: Function missing docstring"
+    ],
+    "final": []
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 2,
+      "repairs_proposed": 2,
+      "repairs": [
+        {
+          "line": 20,
+          "old": "def collect_repo_context(root: Path, max_files: int = 25) -> str:",
+          "new": "def collect_repo_context(root: Path, max_files: int = 25) -> str:\n    \"\"\"Collect Python file contents from repository for context.\n    \n    Args:\n        root: Repository root directory path\n        max_files: Maximum number of files to collect\n        \n    Returns:\n        String containing concatenated file contents\n    \"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 40,
+          "old": "def main():",
+          "new": "def main():\n    \"\"\"Main entry point for Clawdbot CLI application.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "#!/usr/bin/env python3\n\nimport argparse\nfrom pathlib import Path\n\nfrom claude_backend import ClaudeBackend\n\n\nSYSTEM_PROMPT = \"\"\"You are Clawdbot \u2014 an elite software co-engineer.\n\nRules:\n- Be precise and technical.\n- If modifying files: output FULL replacement files.\n- Prefix each file with: RM <filename>\n- Never output partial diffs.\n- Never add commentary outside RM blocks unless explicitly asked.\n\"\"\"\n\n\ndef collect_repo_context(root: Path, max_files: int = 25) -> str:\n    files = []\n    for path in root.rglob(\"*.py\"):\n        if \"__pycache__\" in str(path) or \".venv\" in str(path):\n            continue\n        files.append(path)\n        if len(files) >= max_files:\n            break\n\n    context = []\n    for path in files:\n        try:\n            code = path.read_text()\n            context.append(f\"\\n# FILE: {path}\\n{code}\\n\")\n        except Exception:\n            pass\n\n    return \"\\n\".join(context)\n\n\ndef main():\n    parser = argparse.ArgumentParser(description=\"Clawdbot \u2014 terminal AI co-engineer\")\n    parser.add_argument(\"prompt\", help=\"Instruction for Clawdbot\")\n    parser.add_argument(\"--repo\", default=\".\", help=\"Repo root for context\")\n    parser.add_argument(\"--model\", default=\"claude-sonnet-4-20250514\", help=\"Claude model\")\n\n    args = parser.parse_args()\n\n    repo_root = Path(args.repo).resolve()\n    context = collect_repo_context(repo_root)\n\n    user_prompt = f\"\"\"\nINSTRUCTION:\n{args.prompt}\n\nREPO CONTEXT:\n{context}\n\"\"\"\n\n    backend = ClaudeBackend(model=args.model, max_tokens=2500)\n    response = backend.judge(SYSTEM_PROMPT, user_prompt)\n\n    print(\"\\n=== CLAWDBOT RESPONSE ===\\n\")\n    print(response.strip())\n    print(\"\\n=== END ===\\n\")\n\n\nif __name__ == \"__main__\":\n    main()\n",
+    "after": "#!/usr/bin/env python3\n\nimport argparse\nfrom pathlib import Path\n\nfrom claude_backend import ClaudeBackend\n\n\nSYSTEM_PROMPT = \"\"\"You are Clawdbot \u2014 an elite software co-engineer.\n\nRules:\n- Be precise and technical.\n- If modifying files: output FULL replacement files.\n- Prefix each file with: RM <filename>\n- Never output partial diffs.\n- Never add commentary outside RM blocks unless explicitly asked.\n\"\"\"\n\n\ndef collect_repo_context(root: Path, max_files: int = 25) -> str:\n    \"\"\"Collect Python file contents from repository for context.\n    \n    Args:\n        root: Repository root directory path\n        max_files: Maximum number of files to collect\n        \n    Returns:\n        String containing concatenated file contents\n    \"\"\"\n    files = []\n    for path in root.rglob(\"*.py\"):\n        if \"__pycache__\" in str(path) or \".venv\" in str(path):\n            continue\n        files.append(path)\n        if len(files) >= max_files:\n            break\n\n    context = []\n    for path in files:\n        try:\n            code = path.read_text()\n            context.append(f\"\\n# FILE: {path}\\n{code}\\n\")\n        except Exception:\n            pass\n\n    return \"\\n\".join(context)\n\n\ndef main():\n    \"\"\"Main entry point for Clawdbot CLI application.\"\"\"\n    parser = argparse.ArgumentParser(description=\"Clawdbot \u2014 terminal AI co-engineer\")\n    parser.add_argument(\"prompt\", help=\"Instruction for Clawdbot\")\n    parser.add_argument(\"--repo\", default=\".\", help=\"Repo root for context\")\n    parser.add_argument(\"--model\", default=\"claude-sonnet-4-20250514\", help=\"Claude model\")\n\n    args = parser.parse_args()\n\n    repo_root = Path(args.repo).resolve()\n    context = collect_repo_context(repo_root)\n\n    user_prompt = f\"\"\"\nINSTRUCTION:\n{args.prompt}\n\nREPO CONTEXT:\n{context}\n\"\"\"\n\n    backend = ClaudeBackend(model=args.model, max_tokens=2500)\n    response = backend.judge(SYSTEM_PROMPT, user_prompt)\n\n    print(\"\\n=== CLAWDBOT RESPONSE ===\\n\")\n    print(response.strip())\n    print(\"\\n=== END ===\\n\")\n\n\nif __name__ == \"__main__\":\n    main()\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:23:38.084322+00:00"
+  }
+}

@@ -1,0 +1,3 @@
+def buggy(x, y, z):
+    result = x + y + z
+    return result

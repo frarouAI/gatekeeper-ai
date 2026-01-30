@@ -1,0 +1,48 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:25:58.737034+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/.agent_backups/20260127_133136/whatsapp_bot.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 1,
+    "final_failure_count": 1,
+    "iterations_used": 1,
+    "repair_confidence": 0.0,
+    "improved": false,
+    "fully_repaired": false
+  },
+  "failures": {
+    "initial": [
+      "Line 62: Function missing docstring"
+    ],
+    "final": [
+      "Line 62: Function missing docstring"
+    ]
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 1,
+      "repairs_proposed": 1,
+      "repairs": [
+        {
+          "line": 62,
+          "old": "def status():",
+          "new": "def status():\n    \"\"\"Health check endpoint\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": false
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "#!/usr/bin/env python3\n\"\"\"\nWhatsApp Code Judge Bot via Twilio\nSend code \u2192 Get instant review\n\"\"\"\nfrom flask import Flask, request\nfrom twilio.twiml.messaging_response import MessagingResponse\nfrom twilio.rest import Client\nfrom bot_server import CodeJudgeBot, CONFIG\nimport os\n\napp = Flask(__name__)\n\n# Twilio credentials (get from https://console.twilio.com)\nTWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', 'your_account_sid')\nTWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', 'your_auth_token')\nTWILIO_WHATSAPP_NUMBER = os.environ.get('TWILIO_WHATSAPP_NUMBER', 'whatsapp:+14155238886')\n\nbot = CodeJudgeBot(CONFIG)\nclient = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)\n\n# Store conversation state\nuser_states = {}\n\n\n@app.route('/webhook', methods=['POST'])\ndef whatsapp_webhook():\n    \"\"\"Handle incoming WhatsApp messages\"\"\"\n    incoming_msg = request.values.get('Body', '').strip()\n    from_number = request.values.get('From', '')\n    \n    resp = MessagingResponse()\n    msg = resp.message()\n    \n    # Check if it's code (starts with def, import, class, etc.)\n    if any(incoming_msg.startswith(keyword) for keyword in ['def ', 'import ', 'class ', 'from ', '@']):\n        # Judge the code\n        try:\n            result = bot.judge_code(incoming_msg, from_number)\n            verdict = bot.format_verdict(result)\n            msg.body(verdict)\n        except Exception as e:\n            msg.body(f\"\u274c Error judging code: {str(e)}\")\n    \n    elif incoming_msg.lower() in ['help', 'hi', 'hello', 'start']:\n        msg.body(\"\"\"\n\ud83e\udd16 *Code Judge Bot*\n\nSend me Python code and I'll review it!\n\n*Features:*\n\u2705 Correctness check\n\u2705 Security scan\n\u2705 Performance analysis\n\u2705 Style review\n\u2705 Code execution test\n\n*Example:*\n```\nimport math\n\ndef area(r):\n    return math.pi * r ** 2\n```\n\nTry it now!\n        \"\"\")\n    \n    else:\n        msg.body(\"\ud83d\udcdd Send me Python code to review, or type 'help' for instructions.\")\n    \n    return str(resp)\n\n\n@app.route('/status', methods=['GET'])\ndef status():\n    \"\"\"Health check endpoint\"\"\"\n    return {\"status\": \"running\", \"bot\": \"Code Judge WhatsApp\"}\n\n\nif __name__ == '__main__':\n    print(\"\ud83d\ude80 WhatsApp Bot starting on http://localhost:5000\")\n    print(\"\ud83d\udcf1 Configure Twilio webhook: http://your-server:5000/webhook\")\n    app.run(host='0.0.0.0', port=5000, debug=True)\n",
+    "after": "#!/usr/bin/env python3\n\"\"\"\nWhatsApp Code Judge Bot via Twilio\nSend code \u2192 Get instant review\n\"\"\"\nfrom flask import Flask, request\nfrom twilio.twiml.messaging_response import MessagingResponse\nfrom twilio.rest import Client\nfrom bot_server import CodeJudgeBot, CONFIG\nimport os\n\napp = Flask(__name__)\n\n# Twilio credentials (get from https://console.twilio.com)\nTWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', 'your_account_sid')\nTWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', 'your_auth_token')\nTWILIO_WHATSAPP_NUMBER = os.environ.get('TWILIO_WHATSAPP_NUMBER', 'whatsapp:+14155238886')\n\nbot = CodeJudgeBot(CONFIG)\nclient = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)\n\n# Store conversation state\nuser_states = {}\n\n\n@app.route('/webhook', methods=['POST'])\ndef whatsapp_webhook():\n    \"\"\"Handle incoming WhatsApp messages\"\"\"\n    incoming_msg = request.values.get('Body', '').strip()\n    from_number = request.values.get('From', '')\n    \n    resp = MessagingResponse()\n    msg = resp.message()\n    \n    # Check if it's code (starts with def, import, class, etc.)\n    if any(incoming_msg.startswith(keyword) for keyword in ['def ', 'import ', 'class ', 'from ', '@']):\n        # Judge the code\n        try:\n            result = bot.judge_code(incoming_msg, from_number)\n            verdict = bot.format_verdict(result)\n            msg.body(verdict)\n        except Exception as e:\n            msg.body(f\"\u274c Error judging code: {str(e)}\")\n    \n    elif incoming_msg.lower() in ['help', 'hi', 'hello', 'start']:\n        msg.body(\"\"\"\n\ud83e\udd16 *Code Judge Bot*\n\nSend me Python code and I'll review it!\n\n*Features:*\n\u2705 Correctness check\n\u2705 Security scan\n\u2705 Performance analysis\n\u2705 Style review\n\u2705 Code execution test\n\n*Example:*\n```\nimport math\n\ndef area(r):\n    return math.pi * r ** 2\n```\n\nTry it now!\n        \"\"\")\n    \n    else:\n        msg.body(\"\ud83d\udcdd Send me Python code to review, or type 'help' for instructions.\")\n    \n    return str(resp)\n\n\n@app.route('/status', methods=['GET'])\ndef status():\n    \"\"\"Health check endpoint\"\"\"\n    return {\"status\": \"running\", \"bot\": \"Code Judge WhatsApp\"}\n\n\nif __name__ == '__main__':\n    print(\"\ud83d\ude80 WhatsApp Bot starting on http://localhost:5000\")\n    print(\"\ud83d\udcf1 Configure Twilio webhook: http://your-server:5000/webhook\")\n    app.run(host='0.0.0.0', port=5000, debug=True)\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:25:58.737034+00:00"
+  }
+}

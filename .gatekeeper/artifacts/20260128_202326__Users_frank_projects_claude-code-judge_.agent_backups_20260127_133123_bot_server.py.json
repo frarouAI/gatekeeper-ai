@@ -1,0 +1,100 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:23:26.180350+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/.agent_backups/20260127_133123/bot_server.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 7,
+    "final_failure_count": 0,
+    "iterations_used": 1,
+    "repair_confidence": 1.0,
+    "improved": true,
+    "fully_repaired": true
+  },
+  "failures": {
+    "initial": [
+      "Line 29: Function missing docstring",
+      "Line 39: Function missing docstring",
+      "Line 45: Function missing docstring",
+      "Line 56: Function missing docstring",
+      "Line 77: Function missing docstring",
+      "Line 85: Function missing docstring",
+      "Line 120: Function missing docstring"
+    ],
+    "final": []
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 7,
+      "repairs_proposed": 7,
+      "repairs": [
+        {
+          "line": 29,
+          "old": "    def __init__(self, config: dict):",
+          "new": "    def __init__(self, config: dict):\n        \"\"\"Initialize the CodeJudgeBot with configuration.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 39,
+          "old": "    def setup_dirs(self):",
+          "new": "    def setup_dirs(self):\n        \"\"\"Create necessary directories for bot operation.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 45,
+          "old": "    def judge_code(self, code: str, user_id: str = \"local\") -> dict:",
+          "new": "    def judge_code(self, code: str, user_id: str = \"local\") -> dict:\n        \"\"\"Judge code and save results to file.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 56,
+          "old": "    def format_verdict(self, result: dict) -> str:",
+          "new": "    def format_verdict(self, result: dict) -> str:\n        \"\"\"Format judgment result into readable verdict message.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 77,
+          "old": "    def log(self, message: str):",
+          "new": "    def log(self, message: str):\n        \"\"\"Log message to console and file.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 85,
+          "old": "    def watch_directory(self):",
+          "new": "    def watch_directory(self):\n        \"\"\"Watch directories for new Python files and process them.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 120,
+          "old": "def main():",
+          "new": "def main():\n    \"\"\"Main entry point for the bot.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "#!/usr/bin/env python3\n\"\"\"\nClaude Code Judge Bot - 24/7 AI Assistant\nMulti-channel code review assistant with execution testing.\n\"\"\"\nimport os\nimport json\nimport time\nfrom datetime import datetime\nfrom pathlib import Path\nfrom typing import Dict, Optional\nfrom multi_judge import MultiAgentCodeJudge\n\n# Configuration\nCONFIG = {\n    \"engine_version\": \"v2\",\n    \"profile\": \"startup\",\n    \"port\": 8080,\n    \"watch_dirs\": [\"./submissions\", \"./inbox\"],\n    \"results_dir\": \"./results\",\n    \"allowed_users\": [],\n    \"dm_policy\": \"pairing\",\n}\n\n\nclass CodeJudgeBot:\n    \"\"\"24/7 Code Review Assistant\"\"\"\n    \n    def __init__(self, config: dict):\n        self.config = config\n        self.judge = MultiAgentCodeJudge(\n            engine_version=config[\"engine_version\"],\n            profile=config[\"profile\"]\n        )\n        self.pairing_codes = {}\n        self.allowed_users = set(config.get(\"allowed_users\", []))\n        self.setup_dirs()\n    \n    def setup_dirs(self):\n        for dir_path in self.config[\"watch_dirs\"]:\n            Path(dir_path).mkdir(exist_ok=True)\n        Path(self.config[\"results_dir\"]).mkdir(exist_ok=True)\n        Path(\"./logs\").mkdir(exist_ok=True)\n    \n    def judge_code(self, code: str, user_id: str = \"local\") -> dict:\n        self.log(f\"Judging code from {user_id}\")\n        result = self.judge.judge(code)\n        \n        timestamp = datetime.now().strftime(\"%Y%m%d_%H%M%S\")\n        result_file = Path(self.config[\"results_dir\"]) / f\"{user_id}_{timestamp}.json\"\n        with open(result_file, \"w\") as f:\n            json.dump(result, f, indent=2)\n        \n        return result\n    \n    def format_verdict(self, result: dict) -> str:\n        status = \"\u2705 PASS\" if result[\"overall_pass\"] else \"\u274c FAIL\"\n        score = result[\"average_score\"]\n        \n        msg = f\"{status} Overall Score: {score}/100\\n\\n\"\n        \n        if result[\"blocking_failures\"]:\n            msg += \"\ud83d\udeab Blocking Issues:\\n\"\n            for agent in result[\"blocking_failures\"]:\n                msg += f\"  \u2022 {agent}\\n\"\n            msg += \"\\n\"\n        \n        msg += \"\ud83d\udcca Detailed Scores:\\n\"\n        for v in result[\"verdicts\"]:\n            emoji = \"\u2705\" if v[\"pass\"] else \"\u274c\"\n            msg += f\"{emoji} {v['agent']}: {v['score']}/100\\n\"\n            if v[\"issues\"] and len(v[\"issues\"]) > 0:\n                msg += f\"  Issue: {v['issues'][0][:80]}...\\n\"\n        \n        return msg\n    \n    def log(self, message: str):\n        timestamp = datetime.now().strftime(\"%Y-%m-%d %H:%M:%S\")\n        log_msg = f\"[{timestamp}] {message}\"\n        print(log_msg)\n        \n        with open(\"./logs/bot.log\", \"a\") as f:\n            f.write(log_msg + \"\\n\")\n    \n    def watch_directory(self):\n        self.log(\"\ud83e\udd16 Code Judge Bot Started\")\n        self.log(f\"\ud83d\udcc1 Watching: {', '.join(self.config['watch_dirs'])}\")\n        \n        processed = set()\n        \n        while True:\n            try:\n                for watch_dir in self.config[\"watch_dirs\"]:\n                    for filepath in Path(watch_dir).glob(\"*.py\"):\n                        if str(filepath) not in processed:\n                            self.log(f\"\ud83d\udcdd New submission: {filepath}\")\n                            \n                            with open(filepath, 'r') as f:\n                                code = f.read()\n                            \n                            result = self.judge_code(code, filepath.stem)\n                            verdict = self.format_verdict(result)\n                            \n                            self.log(f\"\\n{verdict}\")\n                            \n                            processed_path = filepath.with_suffix('.processed')\n                            filepath.rename(processed_path)\n                            processed.add(str(filepath))\n                \n                time.sleep(2)\n                \n            except KeyboardInterrupt:\n                self.log(\"\ud83d\udc4b Shutting down...\")\n                break\n            except Exception as e:\n                self.log(f\"\u274c Error: {e}\")\n                time.sleep(5)\n\n\ndef main():\n    bot = CodeJudgeBot(CONFIG)\n    bot.watch_directory()\n\n\nif __name__ == \"__main__\":\n    main()\n",
+    "after": "#!/usr/bin/env python3\n\"\"\"\nClaude Code Judge Bot - 24/7 AI Assistant\nMulti-channel code review assistant with execution testing.\n\"\"\"\nimport os\nimport json\nimport time\nfrom datetime import datetime\nfrom pathlib import Path\nfrom typing import Dict, Optional\nfrom multi_judge import MultiAgentCodeJudge\n\n# Configuration\nCONFIG = {\n    \"engine_version\": \"v2\",\n    \"profile\": \"startup\",\n    \"port\": 8080,\n    \"watch_dirs\": [\"./submissions\", \"./inbox\"],\n    \"results_dir\": \"./results\",\n    \"allowed_users\": [],\n    \"dm_policy\": \"pairing\",\n}\n\n\nclass CodeJudgeBot:\n    \"\"\"24/7 Code Review Assistant\"\"\"\n    \n    def __init__(self, config: dict):\n        \"\"\"Initialize the CodeJudgeBot with configuration.\"\"\"\n        self.config = config\n        self.judge = MultiAgentCodeJudge(\n            engine_version=config[\"engine_version\"],\n            profile=config[\"profile\"]\n        )\n        self.pairing_codes = {}\n        self.allowed_users = set(config.get(\"allowed_users\", []))\n        self.setup_dirs()\n    \n    def setup_dirs(self):\n        \"\"\"Create necessary directories for bot operation.\"\"\"\n        for dir_path in self.config[\"watch_dirs\"]:\n            Path(dir_path).mkdir(exist_ok=True)\n        Path(self.config[\"results_dir\"]).mkdir(exist_ok=True)\n        Path(\"./logs\").mkdir(exist_ok=True)\n    \n    def judge_code(self, code: str, user_id: str = \"local\") -> dict:\n        \"\"\"Judge code and save results to file.\"\"\"\n        self.log(f\"Judging code from {user_id}\")\n        result = self.judge.judge(code)\n        \n        timestamp = datetime.now().strftime(\"%Y%m%d_%H%M%S\")\n        result_file = Path(self.config[\"results_dir\"]) / f\"{user_id}_{timestamp}.json\"\n        with open(result_file, \"w\") as f:\n            json.dump(result, f, indent=2)\n        \n        return result\n    \n    def format_verdict(self, result: dict) -> str:\n        \"\"\"Format judgment result into readable verdict message.\"\"\"\n        status = \"\u2705 PASS\" if result[\"overall_pass\"] else \"\u274c FAIL\"\n        score = result[\"average_score\"]\n        \n        msg = f\"{status} Overall Score: {score}/100\\n\\n\"\n        \n        if result[\"blocking_failures\"]:\n            msg += \"\ud83d\udeab Blocking Issues:\\n\"\n            for agent in result[\"blocking_failures\"]:\n                msg += f\"  \u2022 {agent}\\n\"\n            msg += \"\\n\"\n        \n        msg += \"\ud83d\udcca Detailed Scores:\\n\"\n        for v in result[\"verdicts\"]:\n            emoji = \"\u2705\" if v[\"pass\"] else \"\u274c\"\n            msg += f\"{emoji} {v['agent']}: {v['score']}/100\\n\"\n            if v[\"issues\"] and len(v[\"issues\"]) > 0:\n                msg += f\"  Issue: {v['issues'][0][:80]}...\\n\"\n        \n        return msg\n    \n    def log(self, message: str):\n        \"\"\"Log message to console and file.\"\"\"\n        timestamp = datetime.now().strftime(\"%Y-%m-%d %H:%M:%S\")\n        log_msg = f\"[{timestamp}] {message}\"\n        print(log_msg)\n        \n        with open(\"./logs/bot.log\", \"a\") as f:\n            f.write(log_msg + \"\\n\")\n    \n    def watch_directory(self):\n        \"\"\"Watch directories for new Python files and process them.\"\"\"\n        self.log(\"\ud83e\udd16 Code Judge Bot Started\")\n        self.log(f\"\ud83d\udcc1 Watching: {', '.join(self.config['watch_dirs'])}\")\n        \n        processed = set()\n        \n        while True:\n            try:\n                for watch_dir in self.config[\"watch_dirs\"]:\n                    for filepath in Path(watch_dir).glob(\"*.py\"):\n                        if str(filepath) not in processed:\n                            self.log(f\"\ud83d\udcdd New submission: {filepath}\")\n                            \n                            with open(filepath, 'r') as f:\n                                code = f.read()\n                            \n                            result = self.judge_code(code, filepath.stem)\n                            verdict = self.format_verdict(result)\n                            \n                            self.log(f\"\\n{verdict}\")\n                            \n                            processed_path = filepath.with_suffix('.processed')\n                            filepath.rename(processed_path)\n                            processed.add(str(filepath))\n                \n                time.sleep(2)\n                \n            except KeyboardInterrupt:\n                self.log(\"\ud83d\udc4b Shutting down...\")\n                break\n            except Exception as e:\n                self.log(f\"\u274c Error: {e}\")\n                time.sleep(5)\n\n\ndef main():\n    \"\"\"Main entry point for the bot.\"\"\"\n    bot = CodeJudgeBot(CONFIG)\n    bot.watch_directory()\n\n\nif __name__ == \"__main__\":\n    main()\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:23:26.180350+00:00"
+  }
+}

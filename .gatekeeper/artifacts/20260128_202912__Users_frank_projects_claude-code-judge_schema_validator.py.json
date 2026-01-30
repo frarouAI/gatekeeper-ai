@@ -1,0 +1,48 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:29:12.578739+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/schema_validator.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 1,
+    "final_failure_count": 1,
+    "iterations_used": 1,
+    "repair_confidence": 0.0,
+    "improved": false,
+    "fully_repaired": false
+  },
+  "failures": {
+    "initial": [
+      "Line 21: Function missing docstring"
+    ],
+    "final": [
+      "Line 21: Function missing docstring"
+    ]
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 1,
+      "repairs_proposed": 1,
+      "repairs": [
+        {
+          "line": 21,
+          "old": "    def _load_schemas(self):",
+          "new": "    def _load_schemas(self):\n        \"\"\"Load all schema files.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "\"\"\"\nSchema Validator \u2014 Enforce Data Contracts\n\nValidates all artifacts and patches against versioned JSON schemas.\nFails closed on any schema violation.\n\"\"\"\n\nimport json\nfrom pathlib import Path\nfrom typing import Dict, Optional\nimport jsonschema\nfrom jsonschema import validate, ValidationError\n\n\nSCHEMA_DIR = Path(\"schemas\")\n\n\nclass SchemaValidator:\n    \"\"\"Validates data against versioned JSON schemas.\"\"\"\n    \n    def __init__(self):\n        self.schemas = {}\n        self._load_schemas()\n    \n    def _load_schemas(self):\n        \"\"\"Load all schema files.\"\"\"\n        for schema_file in SCHEMA_DIR.glob(\"*.json\"):\n            schema_name = schema_file.stem\n            self.schemas[schema_name] = json.loads(schema_file.read_text())\n    \n    def validate_artifact(self, artifact: Dict) -> tuple[bool, Optional[str]]:\n        \"\"\"\n        Validate repair artifact against schema.\n        \n        Returns:\n            (is_valid, error_message)\n        \"\"\"\n        schema_version = artifact.get(\"schema_version\", \"\")\n        \n        if not schema_version.startswith(\"gatekeeper-artifact-v1\"):\n            return False, f\"Unsupported schema version: {schema_version}\"\n        \n        schema = self.schemas.get(\"artifact_v1\")\n        if not schema:\n            return False, \"Schema artifact_v1.json not found\"\n        \n        try:\n            validate(instance=artifact, schema=schema)\n            return True, None\n        except ValidationError as e:\n            return False, f\"Schema validation failed: {e.message}\"\n    \n    def validate_repair_patch(self, patch: Dict) -> tuple[bool, Optional[str]]:\n        \"\"\"\n        Validate repair patch against schema.\n        \n        Returns:\n            (is_valid, error_message)\n        \"\"\"\n        schema = self.schemas.get(\"artifact_v1\")\n        if not schema:\n            return False, \"Schema not found\"\n        \n        patch_schema = schema.get(\"definitions\", {}).get(\"repair_patch\")\n        if not patch_schema:\n            return False, \"Repair patch schema definition not found\"\n        \n        try:\n            validate(instance=patch, schema=patch_schema)\n            return True, None\n        except ValidationError as e:\n            return False, f\"Patch validation failed: {e.message}\"\n\n\n# Global validator instance\n_validator = None\n\n\ndef get_validator() -> SchemaValidator:\n    \"\"\"Get or create global validator instance.\"\"\"\n    global _validator\n    if _validator is None:\n        _validator = SchemaValidator()\n    return _validator\n\n\ndef validate_artifact_schema(artifact: Dict) -> None:\n    \"\"\"\n    Validate artifact and raise exception if invalid.\n    Fail-closed approach for safety.\n    \"\"\"\n    validator = get_validator()\n    is_valid, error = validator.validate_artifact(artifact)\n    \n    if not is_valid:\n        raise ValueError(f\"Artifact schema validation failed: {error}\")\n\n\ndef validate_patch_schema(patch: Dict) -> None:\n    \"\"\"\n    Validate patch and raise exception if invalid.\n    Fail-closed approach for safety.\n    \"\"\"\n    validator = get_validator()\n    is_valid, error = validator.validate_repair_patch(patch)\n    \n    if not is_valid:\n        raise ValueError(f\"Patch schema validation failed: {error}\")\n\n\n# CLI for testing schemas\nif __name__ == \"__main__\":\n    import sys\n    \n    if len(sys.argv) < 2:\n        print(\"Usage: python schema_validator.py <artifact.json>\")\n        sys.exit(1)\n    \n    artifact_path = Path(sys.argv[1])\n    \n    if not artifact_path.exists():\n        print(f\"Error: File not found: {artifact_path}\")\n        sys.exit(1)\n    \n    artifact = json.loads(artifact_path.read_text())\n    \n    try:\n        validate_artifact_schema(artifact)\n        print(f\"\u2705 Valid artifact: {artifact_path}\")\n        print(f\"   Schema: {artifact['schema_version']}\")\n        print(f\"   Confidence: {artifact['summary']['repair_confidence']}\")\n    except ValueError as e:\n        print(f\"\u274c Invalid artifact: {e}\")\n        sys.exit(1)\n",
+    "after": "\"\"\"\nSchema Validator \u2014 Enforce Data Contracts\n\nValidates all artifacts and patches against versioned JSON schemas.\nFails closed on any schema violation.\n\"\"\"\n\nimport json\nfrom pathlib import Path\nfrom typing import Dict, Optional\nimport jsonschema\nfrom jsonschema import validate, ValidationError\n\n\nSCHEMA_DIR = Path(\"schemas\")\n\n\nclass SchemaValidator:\n    \"\"\"Validates data against versioned JSON schemas.\"\"\"\n    \n    def __init__(self):\n        self.schemas = {}\n        self._load_schemas()\n    \n    def _load_schemas(self):\n        \"\"\"Load all schema files.\"\"\"\n        for schema_file in SCHEMA_DIR.glob(\"*.json\"):\n            schema_name = schema_file.stem\n            self.schemas[schema_name] = json.loads(schema_file.read_text())\n    \n    def validate_artifact(self, artifact: Dict) -> tuple[bool, Optional[str]]:\n        \"\"\"\n        Validate repair artifact against schema.\n        \n        Returns:\n            (is_valid, error_message)\n        \"\"\"\n        schema_version = artifact.get(\"schema_version\", \"\")\n        \n        if not schema_version.startswith(\"gatekeeper-artifact-v1\"):\n            return False, f\"Unsupported schema version: {schema_version}\"\n        \n        schema = self.schemas.get(\"artifact_v1\")\n        if not schema:\n            return False, \"Schema artifact_v1.json not found\"\n        \n        try:\n            validate(instance=artifact, schema=schema)\n            return True, None\n        except ValidationError as e:\n            return False, f\"Schema validation failed: {e.message}\"\n    \n    def validate_repair_patch(self, patch: Dict) -> tuple[bool, Optional[str]]:\n        \"\"\"\n        Validate repair patch against schema.\n        \n        Returns:\n            (is_valid, error_message)\n        \"\"\"\n        schema = self.schemas.get(\"artifact_v1\")\n        if not schema:\n            return False, \"Schema not found\"\n        \n        patch_schema = schema.get(\"definitions\", {}).get(\"repair_patch\")\n        if not patch_schema:\n            return False, \"Repair patch schema definition not found\"\n        \n        try:\n            validate(instance=patch, schema=patch_schema)\n            return True, None\n        except ValidationError as e:\n            return False, f\"Patch validation failed: {e.message}\"\n\n\n# Global validator instance\n_validator = None\n\n\ndef get_validator() -> SchemaValidator:\n    \"\"\"Get or create global validator instance.\"\"\"\n    global _validator\n    if _validator is None:\n        _validator = SchemaValidator()\n    return _validator\n\n\ndef validate_artifact_schema(artifact: Dict) -> None:\n    \"\"\"\n    Validate artifact and raise exception if invalid.\n    Fail-closed approach for safety.\n    \"\"\"\n    validator = get_validator()\n    is_valid, error = validator.validate_artifact(artifact)\n    \n    if not is_valid:\n        raise ValueError(f\"Artifact schema validation failed: {error}\")\n\n\ndef validate_patch_schema(patch: Dict) -> None:\n    \"\"\"\n    Validate patch and raise exception if invalid.\n    Fail-closed approach for safety.\n    \"\"\"\n    validator = get_validator()\n    is_valid, error = validator.validate_repair_patch(patch)\n    \n    if not is_valid:\n        raise ValueError(f\"Patch schema validation failed: {error}\")\n\n\n# CLI for testing schemas\nif __name__ == \"__main__\":\n    import sys\n    \n    if len(sys.argv) < 2:\n        print(\"Usage: python schema_validator.py <artifact.json>\")\n        sys.exit(1)\n    \n    artifact_path = Path(sys.argv[1])\n    \n    if not artifact_path.exists():\n        print(f\"Error: File not found: {artifact_path}\")\n        sys.exit(1)\n    \n    artifact = json.loads(artifact_path.read_text())\n    \n    try:\n        validate_artifact_schema(artifact)\n        print(f\"\u2705 Valid artifact: {artifact_path}\")\n        print(f\"   Schema: {artifact['schema_version']}\")\n        print(f\"   Confidence: {artifact['summary']['repair_confidence']}\")\n    except ValueError as e:\n        print(f\"\u274c Invalid artifact: {e}\")\n        sys.exit(1)\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:29:12.578739+00:00"
+  }
+}

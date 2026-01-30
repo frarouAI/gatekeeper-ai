@@ -1,0 +1,36 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:28:20.323728+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/json_judge.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 3,
+    "final_failure_count": 3,
+    "iterations_used": 0,
+    "repair_confidence": 0.0,
+    "improved": false,
+    "fully_repaired": false
+  },
+  "failures": {
+    "initial": [
+      "Line 6: Function missing docstring",
+      "Line 9: Function missing docstring",
+      "Line 53: Function missing docstring"
+    ],
+    "final": [
+      "Line 6: Function missing docstring",
+      "Line 9: Function missing docstring",
+      "Line 53: Function missing docstring"
+    ]
+  },
+  "iterations": [],
+  "diff": {
+    "before": "import json\nfrom claude_backend import ClaudeBackend\n\n\nclass JSONCodeJudge:\n    def __init__(self, model=\"claude-sonnet-4-20250514\"):\n        self.backend = ClaudeBackend(model=model)\n\n    def judge(self, code: str) -> dict:\n        system_prompt = \"\"\"\nYou are a strict code judge.\n\nYou MUST return your verdict as strict JSON using EXACTLY this schema:\n\n{\n  \"pass\": true or false,\n  \"score\": 0-100,\n  \"issues\": [\"string\", ...],\n  \"summary\": \"string\"\n}\n\nRules:\n- \"pass\" is true only if the code is fully correct and production-safe.\n- \"score\" reflects overall quality and correctness.\n- \"issues\" must be empty if pass=true.\n- \"summary\" must be concise (1\u20133 sentences).\n- Output ONLY valid JSON. No markdown. No commentary.\n\"\"\"\n\n        user_prompt = f\"\"\"\nReview this code:\n\n{code}\n\"\"\"\n\n        raw = self.backend.judge(system_prompt, user_prompt)\n\n        try:\n            data = json.loads(raw)\n        except json.JSONDecodeError:\n            data = {\n                \"pass\": False,\n                \"score\": 0,\n                \"issues\": [\"Model did not return valid JSON\"],\n                \"summary\": raw[:500]\n            }\n\n        return data\n\n\nif __name__ == \"__main__\":\n    code = \"\"\"\ndef add(a, b):\n    return a + b\n\"\"\"\n\n    judge = JSONCodeJudge()\n    verdict = judge.judge(code)\n    print(json.dumps(verdict, indent=2))\n",
+    "after": "import json\nfrom claude_backend import ClaudeBackend\n\n\nclass JSONCodeJudge:\n    def __init__(self, model=\"claude-sonnet-4-20250514\"):\n        self.backend = ClaudeBackend(model=model)\n\n    def judge(self, code: str) -> dict:\n        system_prompt = \"\"\"\nYou are a strict code judge.\n\nYou MUST return your verdict as strict JSON using EXACTLY this schema:\n\n{\n  \"pass\": true or false,\n  \"score\": 0-100,\n  \"issues\": [\"string\", ...],\n  \"summary\": \"string\"\n}\n\nRules:\n- \"pass\" is true only if the code is fully correct and production-safe.\n- \"score\" reflects overall quality and correctness.\n- \"issues\" must be empty if pass=true.\n- \"summary\" must be concise (1\u20133 sentences).\n- Output ONLY valid JSON. No markdown. No commentary.\n\"\"\"\n\n        user_prompt = f\"\"\"\nReview this code:\n\n{code}\n\"\"\"\n\n        raw = self.backend.judge(system_prompt, user_prompt)\n\n        try:\n            data = json.loads(raw)\n        except json.JSONDecodeError:\n            data = {\n                \"pass\": False,\n                \"score\": 0,\n                \"issues\": [\"Model did not return valid JSON\"],\n                \"summary\": raw[:500]\n            }\n\n        return data\n\n\nif __name__ == \"__main__\":\n    code = \"\"\"\ndef add(a, b):\n    return a + b\n\"\"\"\n\n    judge = JSONCodeJudge()\n    verdict = judge.judge(code)\n    print(json.dumps(verdict, indent=2))\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:28:20.323728+00:00"
+  }
+}

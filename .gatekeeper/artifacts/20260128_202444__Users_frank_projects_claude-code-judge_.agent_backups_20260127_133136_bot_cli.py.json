@@ -1,0 +1,55 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:24:44.597954+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/.agent_backups/20260127_133136/bot_cli.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 2,
+    "final_failure_count": 0,
+    "iterations_used": 1,
+    "repair_confidence": 1.0,
+    "improved": true,
+    "fully_repaired": true
+  },
+  "failures": {
+    "initial": [
+      "Line 6: Function missing docstring",
+      "Line 16: Function missing docstring"
+    ],
+    "final": []
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 2,
+      "repairs_proposed": 2,
+      "repairs": [
+        {
+          "line": 6,
+          "old": "def judge_file(filepath: str):",
+          "new": "def judge_file(filepath: str):\n    \"\"\"Judge a Python file using the CodeJudgeBot.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 16,
+          "old": "def main():",
+          "new": "def main():\n    \"\"\"Main entry point for the CLI application.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "#!/usr/bin/env python3\nimport sys\nfrom pathlib import Path\nfrom bot_server import CodeJudgeBot, CONFIG\n\ndef judge_file(filepath: str):\n    bot = CodeJudgeBot(CONFIG)\n    \n    with open(filepath, 'r') as f:\n        code = f.read()\n    \n    result = bot.judge_code(code, Path(filepath).stem)\n    verdict = bot.format_verdict(result)\n    print(verdict)\n\ndef main():\n    if len(sys.argv) < 3 or sys.argv[1] != \"judge\":\n        print(\"Usage: python3 bot_cli.py judge <file.py>\")\n        return\n    \n    judge_file(sys.argv[2])\n\nif __name__ == \"__main__\":\n    main()\n",
+    "after": "#!/usr/bin/env python3\nimport sys\nfrom pathlib import Path\nfrom bot_server import CodeJudgeBot, CONFIG\n\ndef judge_file(filepath: str):\n    \"\"\"Judge a Python file using the CodeJudgeBot.\"\"\"\n    bot = CodeJudgeBot(CONFIG)\n    \n    with open(filepath, 'r') as f:\n        code = f.read()\n    \n    result = bot.judge_code(code, Path(filepath).stem)\n    verdict = bot.format_verdict(result)\n    print(verdict)\n\ndef main():\n    \"\"\"Main entry point for the CLI application.\"\"\"\n    if len(sys.argv) < 3 or sys.argv[1] != \"judge\":\n        print(\"Usage: python3 bot_cli.py judge <file.py>\")\n        return\n    \n    judge_file(sys.argv[2])\n\nif __name__ == \"__main__\":\n    main()\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:24:44.597954+00:00"
+  }
+}

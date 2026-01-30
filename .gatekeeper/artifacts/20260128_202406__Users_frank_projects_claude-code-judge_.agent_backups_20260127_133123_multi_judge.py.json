@@ -1,0 +1,91 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:24:06.790943+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/.agent_backups/20260127_133123/multi_judge.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 6,
+    "final_failure_count": 0,
+    "iterations_used": 1,
+    "repair_confidence": 1.0,
+    "improved": true,
+    "fully_repaired": true
+  },
+  "failures": {
+    "initial": [
+      "Line 20: Function missing docstring",
+      "Line 46: Function missing docstring",
+      "Line 53: Function missing docstring",
+      "Line 77: Function missing docstring",
+      "Line 107: Function missing docstring",
+      "Line 120: Function missing docstring"
+    ],
+    "final": []
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 6,
+      "repairs_proposed": 6,
+      "repairs": [
+        {
+          "line": 20,
+          "old": "    def __init__(",
+          "new": "    def __init__(\n        \"\"\"Initialize MultiAgentCodeJudge with configuration.\"\"\",",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 46,
+          "old": "    def _cache_key(self, code: str) -> str:",
+          "new": "    def _cache_key(self, code: str) -> str:\n        \"\"\"Generate cache key for code.\"\"\",",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 53,
+          "old": "    def judge(self, code: str) -> dict:",
+          "new": "    def judge(self, code: str) -> dict:\n        \"\"\"Judge code quality.\"\"\",",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 77,
+          "old": "    def gate_repo(self, files: Dict[str, str]) -> dict:",
+          "new": "    def gate_repo(self, files: Dict[str, str]) -> dict:\n        \"\"\"Gate repository files.\"\"\",",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 107,
+          "old": "def add(a: float, b: float) -> float:",
+          "new": "def add(a: float, b: float) -> float:\n    \"\"\"Add two numbers.\"\"\",",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 120,
+          "old": "def calculate_area(radius: float) -> float:",
+          "new": "def calculate_area(radius: float) -> float:\n    \"\"\"Calculate circle area.\"\"\",",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "import json\nimport hashlib\nfrom typing import Dict\nfrom datetime import datetime, timezone\n\nfrom engines.registry import get_engine\nfrom verdict_cache import VerdictCache\nfrom verdict_signer import VerdictSigner\n\nSCHEMA_VERSION = \"1.2\"\n\nPROFILES = {\n    \"startup\": {\"threshold\": 75},\n    \"strict\":  {\"threshold\": 85},\n    \"relaxed\": {\"threshold\": 65},\n}\n\n\nclass MultiAgentCodeJudge:\n    def __init__(\n        self,\n        profile=\"startup\",\n        engine_version=\"v1\",\n        model=\"claude-sonnet-4-20250514\",\n        max_tokens=1500,\n        enable_cache=False,\n        sign_key=None,\n        verify=False\n    ):\n        if profile not in PROFILES:\n            raise ValueError(f\"Unknown profile '{profile}'. Available: {list(PROFILES.keys())}\")\n\n        self.profile_name = profile\n        self.threshold = PROFILES[profile][\"threshold\"]\n        self.engine_version = engine_version\n        self.name = f\"multi-agent-judge-{engine_version}\"\n\n        # Get the engine class and instantiate it\n        EngineClass = get_engine(engine_version)\n        self.engine = EngineClass(model=model, profile=profile, max_tokens=max_tokens)\n\n        self.cache = VerdictCache() if enable_cache else None\n        self.signer = VerdictSigner(sign_key.encode()) if sign_key else None\n        self.verify_signatures = verify\n\n    def _cache_key(self, code: str) -> str:\n        h = hashlib.sha256()\n        h.update(code.encode(\"utf-8\"))\n        h.update(self.profile_name.encode(\"utf-8\"))\n        h.update(self.engine_version.encode(\"utf-8\"))\n        return h.hexdigest()\n\n    def judge(self, code: str) -> dict:\n        cache_hit = False\n        key = None\n\n        if self.cache:\n            key = self._cache_key(code)\n            cached = self.cache.get(key)\n            if cached:\n                cached[\"cache_hit\"] = True\n                return cached\n\n        # Delegate to the engine\n        result = self.engine.judge(code)\n        result[\"cache_hit\"] = cache_hit\n\n        if self.signer:\n            result = self.signer.sign(result)\n\n        if self.cache and key:\n            result[\"cache_hit\"] = False\n            self.cache.set(key, result)\n\n        return result\n\n    def gate_repo(self, files: Dict[str, str]) -> dict:\n        blocking_agents = []\n        total_scores = []\n\n        for path, code in files.items():\n            verdict = self.judge(code)\n            total_scores.append(verdict[\"average_score\"])\n\n            for agent in verdict[\"blocking_failures\"]:\n                if agent not in blocking_agents:\n                    blocking_agents.append(agent)\n\n        avg_score = round(sum(total_scores) / max(len(total_scores), 1), 2)\n        gate_pass = len(blocking_agents) == 0 and avg_score >= self.threshold\n\n        return {\n            \"gate_pass\": gate_pass,\n            \"engine\": self.engine_version,\n            \"profile\": self.profile_name,\n            \"blocking_agents\": blocking_agents,\n            \"average_score\": avg_score,\n            \"threshold\": self.threshold,\n            \"files\": list(files.keys()),\n        }\n\n\n# ---- manual test ----\nif __name__ == \"__main__\":\n    print(\"=== Testing v1 (no execution) ===\")\n    code_v1 = \"\"\"\ndef add(a: float, b: float) -> float:\n    if a is None or b is None:\n        raise ValueError(\"Inputs must not be None\")\n    return a + b\n\"\"\"\n    judge_v1 = MultiAgentCodeJudge(profile=\"startup\", engine_version=\"v1\")\n    result_v1 = judge_v1.judge(code_v1)\n    print(json.dumps(result_v1, indent=2))\n    \n    print(\"\\n=== Testing v2 (with execution) ===\")\n    code_v2 = \"\"\"\nimport math\n\ndef calculate_area(radius: float) -> float:\n    if radius < 0:\n        raise ValueError(\"Radius must be positive\")\n    return math.pi * radius ** 2\n\nresult = calculate_area(5)\nprint(f\"Area: {result}\")\n\"\"\"\n    judge_v2 = MultiAgentCodeJudge(profile=\"startup\", engine_version=\"v2\")\n    result_v2 = judge_v2.judge(code_v2)\n    print(json.dumps(result_v2, indent=2))\n",
+    "after": "import json\nimport hashlib\nfrom typing import Dict\nfrom datetime import datetime, timezone\n\nfrom engines.registry import get_engine\nfrom verdict_cache import VerdictCache\nfrom verdict_signer import VerdictSigner\n\nSCHEMA_VERSION = \"1.2\"\n\nPROFILES = {\n    \"startup\": {\"threshold\": 75},\n    \"strict\":  {\"threshold\": 85},\n    \"relaxed\": {\"threshold\": 65},\n}\n\n\nclass MultiAgentCodeJudge:\n    def __init__(\n        \"\"\"Initialize MultiAgentCodeJudge with configuration.\"\"\",\n        self,\n        profile=\"startup\",\n        engine_version=\"v1\",\n        model=\"claude-sonnet-4-20250514\",\n        max_tokens=1500,\n        enable_cache=False,\n        sign_key=None,\n        verify=False\n    ):\n        if profile not in PROFILES:\n            raise ValueError(f\"Unknown profile '{profile}'. Available: {list(PROFILES.keys())}\")\n\n        self.profile_name = profile\n        self.threshold = PROFILES[profile][\"threshold\"]\n        self.engine_version = engine_version\n        self.name = f\"multi-agent-judge-{engine_version}\"\n\n        # Get the engine class and instantiate it\n        EngineClass = get_engine(engine_version)\n        self.engine = EngineClass(model=model, profile=profile, max_tokens=max_tokens)\n\n        self.cache = VerdictCache() if enable_cache else None\n        self.signer = VerdictSigner(sign_key.encode()) if sign_key else None\n        self.verify_signatures = verify\n\n    def _cache_key(self, code: str) -> str:\n        \"\"\"Generate cache key for code.\"\"\",\n        h = hashlib.sha256()\n        h.update(code.encode(\"utf-8\"))\n        h.update(self.profile_name.encode(\"utf-8\"))\n        h.update(self.engine_version.encode(\"utf-8\"))\n        return h.hexdigest()\n\n    def judge(self, code: str) -> dict:\n        \"\"\"Judge code quality.\"\"\",\n        cache_hit = False\n        key = None\n\n        if self.cache:\n            key = self._cache_key(code)\n            cached = self.cache.get(key)\n            if cached:\n                cached[\"cache_hit\"] = True\n                return cached\n\n        # Delegate to the engine\n        result = self.engine.judge(code)\n        result[\"cache_hit\"] = cache_hit\n\n        if self.signer:\n            result = self.signer.sign(result)\n\n        if self.cache and key:\n            result[\"cache_hit\"] = False\n            self.cache.set(key, result)\n\n        return result\n\n    def gate_repo(self, files: Dict[str, str]) -> dict:\n        \"\"\"Gate repository files.\"\"\",\n        blocking_agents = []\n        total_scores = []\n\n        for path, code in files.items():\n            verdict = self.judge(code)\n            total_scores.append(verdict[\"average_score\"])\n\n            for agent in verdict[\"blocking_failures\"]:\n                if agent not in blocking_agents:\n                    blocking_agents.append(agent)\n\n        avg_score = round(sum(total_scores) / max(len(total_scores), 1), 2)\n        gate_pass = len(blocking_agents) == 0 and avg_score >= self.threshold\n\n        return {\n            \"gate_pass\": gate_pass,\n            \"engine\": self.engine_version,\n            \"profile\": self.profile_name,\n            \"blocking_agents\": blocking_agents,\n            \"average_score\": avg_score,\n            \"threshold\": self.threshold,\n            \"files\": list(files.keys()),\n        }\n\n\n# ---- manual test ----\nif __name__ == \"__main__\":\n    print(\"=== Testing v1 (no execution) ===\")\n    code_v1 = \"\"\"\ndef add(a: float, b: float) -> float:\n    \"\"\"Add two numbers.\"\"\",\n    if a is None or b is None:\n        raise ValueError(\"Inputs must not be None\")\n    return a + b\n\"\"\"\n    judge_v1 = MultiAgentCodeJudge(profile=\"startup\", engine_version=\"v1\")\n    result_v1 = judge_v1.judge(code_v1)\n    print(json.dumps(result_v1, indent=2))\n    \n    print(\"\\n=== Testing v2 (with execution) ===\")\n    code_v2 = \"\"\"\nimport math\n\ndef calculate_area(radius: float) -> float:\n    \"\"\"Calculate circle area.\"\"\",\n    if radius < 0:\n        raise ValueError(\"Radius must be positive\")\n    return math.pi * radius ** 2\n\nresult = calculate_area(5)\nprint(f\"Area: {result}\")\n\"\"\"\n    judge_v2 = MultiAgentCodeJudge(profile=\"startup\", engine_version=\"v2\")\n    result_v2 = judge_v2.judge(code_v2)\n    print(json.dumps(result_v2, indent=2))\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:24:06.790943+00:00"
+  }
+}

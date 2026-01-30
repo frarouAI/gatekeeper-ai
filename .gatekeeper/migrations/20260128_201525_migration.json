@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-01-28T20:15:25.676293+00:00",
+  "artifact_path": ".gatekeeper/artifacts/20260128_201203_test_schema.py.json",
+  "from_version": "gatekeeper-artifact-v1.0",
+  "to_version": "gatekeeper-artifact-v1.1",
+  "success": true,
+  "error": null
+}

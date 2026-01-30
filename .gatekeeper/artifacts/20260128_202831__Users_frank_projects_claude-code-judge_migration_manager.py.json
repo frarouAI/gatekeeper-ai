@@ -1,0 +1,126 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:28:31.447222+00:00",
+  "filepath": "/Users/frank/projects/claude-code-judge/migration_manager.py",
+  "mode": "repair-dry-run",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 5,
+    "final_failure_count": 4,
+    "iterations_used": 2,
+    "repair_confidence": 0.19999999999999996,
+    "improved": true,
+    "fully_repaired": false
+  },
+  "failures": {
+    "initial": [
+      "Line 17: Function missing docstring",
+      "Line 24: Function missing docstring",
+      "Line 51: Function missing docstring",
+      "Line 124: Function missing docstring",
+      "Line 174: Function missing docstring"
+    ],
+    "final": [
+      "Line 25: Function missing docstring",
+      "Line 52: Function missing docstring",
+      "Line 125: Function missing docstring",
+      "Line 175: Function missing docstring"
+    ]
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 5,
+      "repairs_proposed": 5,
+      "repairs": [
+        {
+          "line": 17,
+          "old": "    def __init__(self):",
+          "new": "    def __init__(self):\n        \"\"\"Initialize migration manager with available migrations.\"\"\"",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 24,
+          "old": "    def get_migration_path(",
+          "new": "    def get_migration_path(",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 51,
+          "old": "    def migrate_artifact(",
+          "new": "    def migrate_artifact(",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 124,
+          "old": "    def rollback_artifact(",
+          "new": "    def rollback_artifact(",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        },
+        {
+          "line": 174,
+          "old": "    def migrate_all_artifacts(",
+          "new": "    def migrate_all_artifacts(",
+          "reason": "Function missing docstring",
+          "category": "docstring",
+          "blocking": true
+        }
+      ]
+    },
+    {
+      "iteration": 2,
+      "failures_before": 4,
+      "repairs_proposed": 4,
+      "repairs": [
+        {
+          "line": 25,
+          "old": "    def get_migration_path(",
+          "new": "    def get_migration_path(",
+          "reason": "Function already has docstring on line 30",
+          "category": "docstring",
+          "blocking": false
+        },
+        {
+          "line": 52,
+          "old": "    def migrate_artifact(",
+          "new": "    def migrate_artifact(",
+          "reason": "Function already has docstring on line 58",
+          "category": "docstring",
+          "blocking": false
+        },
+        {
+          "line": 125,
+          "old": "    def rollback_artifact(",
+          "new": "    def rollback_artifact(",
+          "reason": "Function already has docstring on line 130",
+          "category": "docstring",
+          "blocking": false
+        },
+        {
+          "line": 175,
+          "old": "    def migrate_all_artifacts(",
+          "new": "    def migrate_all_artifacts(",
+          "reason": "Function already has docstring on line 180",
+          "category": "docstring",
+          "blocking": false
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "\"\"\"\nMigration Manager \u2014 Automatic Schema Upgrades\n\nHandles automatic migration of artifacts between schema versions.\n\"\"\"\n\nimport json\nfrom pathlib import Path\nfrom typing import Dict, List, Optional\nfrom migrations.migration_base import Migration, MigrationLog\nfrom migrations.v1_0_to_v1_1 import MigrationV1_0_to_V1_1\n\n\nclass MigrationManager:\n    \"\"\"Manages schema migrations for artifacts.\"\"\"\n    \n    def __init__(self):\n        self.migrations: List[Migration] = [\n            MigrationV1_0_to_V1_1(),\n            # Add more migrations here as schema evolves\n        ]\n        self.log = MigrationLog()\n    \n    def get_migration_path(\n        self,\n        from_version: str,\n        to_version: str\n    ) -> Optional[List[Migration]]:\n        \"\"\"\n        Find migration path between versions.\n        \n        Returns:\n            List of migrations to apply, or None if no path exists\n        \"\"\"\n        # Simple linear path for now\n        # In production, implement graph-based pathfinding\n        \n        path = []\n        current_version = from_version\n        \n        for migration in self.migrations:\n            if migration.from_version == current_version:\n                path.append(migration)\n                current_version = migration.to_version\n                \n                if current_version == to_version:\n                    return path\n        \n        return None\n    \n    def migrate_artifact(\n        self,\n        artifact_path: Path,\n        target_version: str,\n        backup: bool = True\n    ) -> Dict:\n        \"\"\"\n        Migrate artifact to target version.\n        \n        Args:\n            artifact_path: Path to artifact file\n            target_version: Desired schema version\n            backup: Create backup before migration\n        \n        Returns:\n            Migrated artifact\n        \"\"\"\n        # Load artifact\n        artifact = json.loads(artifact_path.read_text())\n        current_version = artifact.get(\"schema_version\")\n        \n        if current_version == target_version:\n            print(f\"Artifact already at version {target_version}\")\n            return artifact\n        \n        # Find migration path\n        migration_path = self.get_migration_path(current_version, target_version)\n        \n        if not migration_path:\n            raise ValueError(\n                f\"No migration path from {current_version} to {target_version}\"\n            )\n        \n        # Create backup if requested\n        if backup:\n            backup_path = artifact_path.with_suffix(\".json.bak\")\n            backup_path.write_text(artifact_path.read_text())\n            print(f\"Backup created: {backup_path}\")\n        \n        # Apply migrations\n        migrated = artifact\n        \n        for migration in migration_path:\n            print(f\"Applying: {migration.from_version} \u2192 {migration.to_version}\")\n            \n            try:\n                migrated = migration.migrate(migrated)\n                \n                # Log successful migration\n                self.log.record_migration(\n                    artifact_path=artifact_path,\n                    from_version=migration.from_version,\n                    to_version=migration.to_version,\n                    success=True\n                )\n                \n            except Exception as e:\n                # Log failed migration\n                self.log.record_migration(\n                    artifact_path=artifact_path,\n                    from_version=migration.from_version,\n                    to_version=migration.to_version,\n                    success=False,\n                    error=str(e)\n                )\n                raise\n        \n        # Write migrated artifact\n        artifact_path.write_text(json.dumps(migrated, indent=2))\n        print(f\"\u2705 Migration complete: {current_version} \u2192 {target_version}\")\n        \n        return migrated\n    \n    def rollback_artifact(\n        self,\n        artifact_path: Path,\n        target_version: str\n    ) -> Dict:\n        \"\"\"\n        Rollback artifact to previous version.\n        \n        Args:\n            artifact_path: Path to artifact file\n            target_version: Desired schema version\n        \n        Returns:\n            Rolled-back artifact\n        \"\"\"\n        # Load artifact\n        artifact = json.loads(artifact_path.read_text())\n        current_version = artifact.get(\"schema_version\")\n        \n        if current_version == target_version:\n            print(f\"Artifact already at version {target_version}\")\n            return artifact\n        \n        # Find rollback path (reverse of migration path)\n        migration_path = self.get_migration_path(target_version, current_version)\n        \n        if not migration_path:\n            raise ValueError(\n                f\"No rollback path from {current_version} to {target_version}\"\n            )\n        \n        # Apply rollbacks in reverse order\n        rolled_back = artifact\n        \n        for migration in reversed(migration_path):\n            print(f\"Rolling back: {migration.to_version} \u2192 {migration.from_version}\")\n            \n            try:\n                rolled_back = migration.rollback(rolled_back)\n                \n            except Exception as e:\n                print(f\"\u274c Rollback failed: {e}\")\n                raise\n        \n        # Write rolled-back artifact\n        artifact_path.write_text(json.dumps(rolled_back, indent=2))\n        print(f\"\u2705 Rollback complete: {current_version} \u2192 {target_version}\")\n        \n        return rolled_back\n    \n    def migrate_all_artifacts(\n        self,\n        artifacts_dir: Path,\n        target_version: str\n    ) -> Dict:\n        \"\"\"\n        Migrate all artifacts in directory to target version.\n        \n        Returns:\n            Summary of migrations\n        \"\"\"\n        artifacts = list(artifacts_dir.glob(\"*.json\"))\n        \n        summary = {\n            \"total\": len(artifacts),\n            \"migrated\": 0,\n            \"already_current\": 0,\n            \"failed\": 0,\n            \"errors\": []\n        }\n        \n        for artifact_path in artifacts:\n            try:\n                artifact = json.loads(artifact_path.read_text())\n                current_version = artifact.get(\"schema_version\")\n                \n                if current_version == target_version:\n                    summary[\"already_current\"] += 1\n                else:\n                    self.migrate_artifact(artifact_path, target_version)\n                    summary[\"migrated\"] += 1\n                    \n            except Exception as e:\n                summary[\"failed\"] += 1\n                summary[\"errors\"].append({\n                    \"file\": str(artifact_path),\n                    \"error\": str(e)\n                })\n        \n        return summary\n\n\n# CLI for running migrations\nif __name__ == \"__main__\":\n    import sys\n    \n    if len(sys.argv) < 2:\n        print(\"\"\"\nUsage:\n  python migration_manager.py migrate <artifact> <target_version>\n  python migration_manager.py migrate-all <target_version>\n  python migration_manager.py rollback <artifact> <target_version>\n        \"\"\")\n        sys.exit(1)\n    \n    manager = MigrationManager()\n    command = sys.argv[1]\n    \n    if command == \"migrate\" and len(sys.argv) >= 4:\n        artifact_path = Path(sys.argv[2])\n        target_version = sys.argv[3]\n        manager.migrate_artifact(artifact_path, target_version)\n        \n    elif command == \"migrate-all\" and len(sys.argv) >= 3:\n        target_version = sys.argv[2]\n        artifacts_dir = Path(\".gatekeeper/artifacts\")\n        summary = manager.migrate_all_artifacts(artifacts_dir, target_version)\n        print(\"\\n\" + json.dumps(summary, indent=2))\n        \n    elif command == \"rollback\" and len(sys.argv) >= 4:\n        artifact_path = Path(sys.argv[2])\n        target_version = sys.argv[3]\n        manager.rollback_artifact(artifact_path, target_version)\n        \n    else:\n        print(\"Invalid command\")\n        sys.exit(1)\n",
+    "after": "\"\"\"\nMigration Manager \u2014 Automatic Schema Upgrades\n\nHandles automatic migration of artifacts between schema versions.\n\"\"\"\n\nimport json\nfrom pathlib import Path\nfrom typing import Dict, List, Optional\nfrom migrations.migration_base import Migration, MigrationLog\nfrom migrations.v1_0_to_v1_1 import MigrationV1_0_to_V1_1\n\n\nclass MigrationManager:\n    \"\"\"Manages schema migrations for artifacts.\"\"\"\n    \n    def __init__(self):\n        \"\"\"Initialize migration manager with available migrations.\"\"\"\n        self.migrations: List[Migration] = [\n            MigrationV1_0_to_V1_1(),\n            # Add more migrations here as schema evolves\n        ]\n        self.log = MigrationLog()\n    \n    def get_migration_path(\n        self,\n        from_version: str,\n        to_version: str\n    ) -> Optional[List[Migration]]:\n        \"\"\"\n        Find migration path between versions.\n        \n        Returns:\n            List of migrations to apply, or None if no path exists\n        \"\"\"\n        # Simple linear path for now\n        # In production, implement graph-based pathfinding\n        \n        path = []\n        current_version = from_version\n        \n        for migration in self.migrations:\n            if migration.from_version == current_version:\n                path.append(migration)\n                current_version = migration.to_version\n                \n                if current_version == to_version:\n                    return path\n        \n        return None\n    \n    def migrate_artifact(\n        self,\n        artifact_path: Path,\n        target_version: str,\n        backup: bool = True\n    ) -> Dict:\n        \"\"\"\n        Migrate artifact to target version.\n        \n        Args:\n            artifact_path: Path to artifact file\n            target_version: Desired schema version\n            backup: Create backup before migration\n        \n        Returns:\n            Migrated artifact\n        \"\"\"\n        # Load artifact\n        artifact = json.loads(artifact_path.read_text())\n        current_version = artifact.get(\"schema_version\")\n        \n        if current_version == target_version:\n            print(f\"Artifact already at version {target_version}\")\n            return artifact\n        \n        # Find migration path\n        migration_path = self.get_migration_path(current_version, target_version)\n        \n        if not migration_path:\n            raise ValueError(\n                f\"No migration path from {current_version} to {target_version}\"\n            )\n        \n        # Create backup if requested\n        if backup:\n            backup_path = artifact_path.with_suffix(\".json.bak\")\n            backup_path.write_text(artifact_path.read_text())\n            print(f\"Backup created: {backup_path}\")\n        \n        # Apply migrations\n        migrated = artifact\n        \n        for migration in migration_path:\n            print(f\"Applying: {migration.from_version} \u2192 {migration.to_version}\")\n            \n            try:\n                migrated = migration.migrate(migrated)\n                \n                # Log successful migration\n                self.log.record_migration(\n                    artifact_path=artifact_path,\n                    from_version=migration.from_version,\n                    to_version=migration.to_version,\n                    success=True\n                )\n                \n            except Exception as e:\n                # Log failed migration\n                self.log.record_migration(\n                    artifact_path=artifact_path,\n                    from_version=migration.from_version,\n                    to_version=migration.to_version,\n                    success=False,\n                    error=str(e)\n                )\n                raise\n        \n        # Write migrated artifact\n        artifact_path.write_text(json.dumps(migrated, indent=2))\n        print(f\"\u2705 Migration complete: {current_version} \u2192 {target_version}\")\n        \n        return migrated\n    \n    def rollback_artifact(\n        self,\n        artifact_path: Path,\n        target_version: str\n    ) -> Dict:\n        \"\"\"\n        Rollback artifact to previous version.\n        \n        Args:\n            artifact_path: Path to artifact file\n            target_version: Desired schema version\n        \n        Returns:\n            Rolled-back artifact\n        \"\"\"\n        # Load artifact\n        artifact = json.loads(artifact_path.read_text())\n        current_version = artifact.get(\"schema_version\")\n        \n        if current_version == target_version:\n            print(f\"Artifact already at version {target_version}\")\n            return artifact\n        \n        # Find rollback path (reverse of migration path)\n        migration_path = self.get_migration_path(target_version, current_version)\n        \n        if not migration_path:\n            raise ValueError(\n                f\"No rollback path from {current_version} to {target_version}\"\n            )\n        \n        # Apply rollbacks in reverse order\n        rolled_back = artifact\n        \n        for migration in reversed(migration_path):\n            print(f\"Rolling back: {migration.to_version} \u2192 {migration.from_version}\")\n            \n            try:\n                rolled_back = migration.rollback(rolled_back)\n                \n            except Exception as e:\n                print(f\"\u274c Rollback failed: {e}\")\n                raise\n        \n        # Write rolled-back artifact\n        artifact_path.write_text(json.dumps(rolled_back, indent=2))\n        print(f\"\u2705 Rollback complete: {current_version} \u2192 {target_version}\")\n        \n        return rolled_back\n    \n    def migrate_all_artifacts(\n        self,\n        artifacts_dir: Path,\n        target_version: str\n    ) -> Dict:\n        \"\"\"\n        Migrate all artifacts in directory to target version.\n        \n        Returns:\n            Summary of migrations\n        \"\"\"\n        artifacts = list(artifacts_dir.glob(\"*.json\"))\n        \n        summary = {\n            \"total\": len(artifacts),\n            \"migrated\": 0,\n            \"already_current\": 0,\n            \"failed\": 0,\n            \"errors\": []\n        }\n        \n        for artifact_path in artifacts:\n            try:\n                artifact = json.loads(artifact_path.read_text())\n                current_version = artifact.get(\"schema_version\")\n                \n                if current_version == target_version:\n                    summary[\"already_current\"] += 1\n                else:\n                    self.migrate_artifact(artifact_path, target_version)\n                    summary[\"migrated\"] += 1\n                    \n            except Exception as e:\n                summary[\"failed\"] += 1\n                summary[\"errors\"].append({\n                    \"file\": str(artifact_path),\n                    \"error\": str(e)\n                })\n        \n        return summary\n\n\n# CLI for running migrations\nif __name__ == \"__main__\":\n    import sys\n    \n    if len(sys.argv) < 2:\n        print(\"\"\"\nUsage:\n  python migration_manager.py migrate <artifact> <target_version>\n  python migration_manager.py migrate-all <target_version>\n  python migration_manager.py rollback <artifact> <target_version>\n        \"\"\")\n        sys.exit(1)\n    \n    manager = MigrationManager()\n    command = sys.argv[1]\n    \n    if command == \"migrate\" and len(sys.argv) >= 4:\n        artifact_path = Path(sys.argv[2])\n        target_version = sys.argv[3]\n        manager.migrate_artifact(artifact_path, target_version)\n        \n    elif command == \"migrate-all\" and len(sys.argv) >= 3:\n        target_version = sys.argv[2]\n        artifacts_dir = Path(\".gatekeeper/artifacts\")\n        summary = manager.migrate_all_artifacts(artifacts_dir, target_version)\n        print(\"\\n\" + json.dumps(summary, indent=2))\n        \n    elif command == \"rollback\" and len(sys.argv) >= 4:\n        artifact_path = Path(sys.argv[2])\n        target_version = sys.argv[3]\n        manager.rollback_artifact(artifact_path, target_version)\n        \n    else:\n        print(\"Invalid command\")\n        sys.exit(1)\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:28:31.447222+00:00"
+  }
+}

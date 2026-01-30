@@ -1,6 +1,19 @@
+# Python
 __pycache__/
-.env
 *.pyc
+
+# Logs
 *.log
-report.html
-verdict.json
+logs/
+
+# Gatekeeper runtime output
+.gatekeeper/
+_smoke/
+_smoke_test.py
+
+# Browser / WhatsApp junk
+.wwebjs_auth/
+whatsapp-bot/.wwebjs_auth/
+
+# OS
+.DS_Store

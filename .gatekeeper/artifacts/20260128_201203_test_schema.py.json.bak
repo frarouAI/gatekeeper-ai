@@ -1,0 +1,64 @@
+{
+  "schema_version": "gatekeeper-artifact-v1.0",
+  "timestamp": "2026-01-28T20:12:03.263144+00:00",
+  "filepath": "test_schema.py",
+  "mode": "repair-live",
+  "profile": "strict",
+  "summary": {
+    "initial_failure_count": 3,
+    "final_failure_count": 0,
+    "iterations_used": 1,
+    "repair_confidence": 1.0,
+    "improved": true,
+    "fully_repaired": true
+  },
+  "failures": {
+    "initial": [
+      "Line 2: Missing spaces around assignment operator",
+      "Line 1: Missing space after comma in function parameters",
+      "Line 1: Function missing docstring"
+    ],
+    "final": []
+  },
+  "iterations": [
+    {
+      "iteration": 1,
+      "failures_before": 3,
+      "repairs_proposed": 3,
+      "repairs": [
+        {
+          "line": 1,
+          "old": "def bad(a,b):",
+          "new": "def bad(a, b):",
+          "reason": "Add space after comma in function parameters",
+          "category": "spacing",
+          "blocking": true
+        },
+        {
+          "line": 2,
+          "old": "    x=a+b",
+          "new": "    x = a + b",
+          "reason": "Add spaces around assignment and addition operators",
+          "category": "spacing",
+          "blocking": true
+        },
+        {
+          "line": 1,
+          "old": "def bad(a, b):",
+          "new": "def bad(a, b):\n    \"\"\"Function docstring.\"\"\"",
+          "reason": "Add missing docstring",
+          "category": "docstring",
+          "blocking": true
+        }
+      ]
+    }
+  ],
+  "diff": {
+    "before": "def bad(a,b):\n    x=a+b\n    return x\n",
+    "after": "def bad(a, b):\n    \"\"\"Function docstring.\"\"\"\n    x = a + b\n    return x\n"
+  },
+  "metadata": {
+    "gatekeeper_version": "1.0.0",
+    "created_at": "2026-01-28T20:12:03.263144+00:00"
+  }
+}
