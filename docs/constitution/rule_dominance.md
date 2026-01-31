@@ -1,0 +1,3 @@
+# Rule Dominance Doctrine (v1.0)
+
+[PASTE THE FULL DOCTRINE TEXT FROM ABOVE HERE — EXACTLY]
