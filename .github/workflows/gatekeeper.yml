@@ -1,46 +1,22 @@
-name: Gatekeeper CI
+name: Gatekeeper
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-  push:
-    branches:
-      - main
 
 jobs:
   gatekeeper:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: 🐍 Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: 📦 Install dependencies
+      - name: Install Gatekeeper (pinned PyPI)
         run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          python3 -m pip install --upgrade pip
+          pip install --user pipx
+          pipx install gatekeeper-ai==0.1.4
 
-      - name: 🛡️ Run Gatekeeper CI
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - name: Run Gatekeeper
         run: |
-          python ci_gate.py
-
-      - name: 💬 Comment Gatekeeper result on PR
-        if: always()
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          python github_comment.py
-
-      - name: 📤 Upload Gatekeeper artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: gatekeeper-artifacts
-          path: .gatekeeper/
+          ~/.local/bin/gatekeeper
