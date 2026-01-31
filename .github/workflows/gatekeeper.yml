@@ -15,7 +15,7 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip
           pip install --user pipx
-          pipx install gatekeeper-ai==0.1.8
+          pipx install gatekeeper-ai==0.1.7
 
       - name: Run Gatekeeper
         run: |
