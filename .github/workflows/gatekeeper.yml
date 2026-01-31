@@ -11,11 +11,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Gatekeeper (pinned PyPI)
+      - name: Install Gatekeeper (PyPI pinned)
         run: |
           python3 -m pip install --upgrade pip
           pip install --user pipx
-          pipx install gatekeeper-ai==0.1.6
+          pipx install gatekeeper-ai==0.1.8
 
       - name: Run Gatekeeper
         run: |
