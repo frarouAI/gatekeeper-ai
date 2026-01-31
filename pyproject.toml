@@ -1,17 +1,17 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "gatekeeper-ai"
-version = "0.1.1"
-description = "Policy gatekeeper for code changes"
+version = "0.1.7"
+description = "Deterministic code governance for CI and PRs"
 readme = "README.md"
 license = { file = "LICENSE" }
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 
 [project.scripts]
 gatekeeper = "gatekeeper.cli.main:main"
 
-[tool.setuptools]
-packages = ["gatekeeper"]
+[tool.setuptools.packages.find]
+where = ["."]
